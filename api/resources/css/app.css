@@ -1,0 +1,8 @@
+@import "tailwindcss";
+
+/* Kustomisasi warna sesuai desain UI/UX Anda */
+@theme {
+  --color-brand-purple: #8A2BE2;
+  --color-alert-red: #FF4444;
+  --color-alert-yellow: #FFBB33;
+}
