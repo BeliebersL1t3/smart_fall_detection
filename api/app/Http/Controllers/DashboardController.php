@@ -25,6 +25,8 @@ class DashboardController extends Controller
             return redirect('/login')->withErrors(['email' => 'Akun Anda belum memiliki perangkat terdaftar.']);
         }
 
+        $device->syncOnlineStatus();
+
         $allEvents = Event::where('device_id', $device->id)->orderBy('occurred_at', 'desc')->get();
         
         $totalEvents = $allEvents->count();
@@ -55,9 +57,6 @@ class DashboardController extends Controller
 
         $recentEvents = $query->get();
 
-        $rooms = ['Living Room', 'Bathroom', 'Master Bedroom', 'Kitchen', 'Stairs', 'Garden'];
-        $randomRoom = $rooms[array_rand($rooms)] . ' - Ground Floor';
-
         return view('dashboard', [
             'device' => $device,
             'recentEvents' => $recentEvents,
@@ -70,7 +69,7 @@ class DashboardController extends Controller
             'falseAlarmCount' => $falseAlarmCount,
             'resolvedCount' => $resolvedCount,
             'cancelledCount' => $cancelledCount,
-            'randomRoom' => $randomRoom,
+            'deviceLocation' => $device->displayLocation(),
             'currentFilter' => $filter,
         ]);
     }
@@ -120,7 +119,7 @@ class DashboardController extends Controller
 
             $device = Device::with('user')->find($event->device_id);
             $user = $device?->user;
-            $location = "Living Room - Ground Floor"; 
+            $location = $device?->displayLocation() ?? 'Perangkat ESP32';
 
             if ($user?->email) {
                 Mail::to($user->email)->send(new EmergencyAlertMail($event, $location));
@@ -145,7 +144,7 @@ class DashboardController extends Controller
     public function simulateEvent($type)
     {
         $device = Device::where('user_id', Auth::id())->first();
-        $location = "Bedroom - Ground Floor"; 
+        $location = $device->displayLocation();
 
         if ($type === 'fall') {
             Event::create([

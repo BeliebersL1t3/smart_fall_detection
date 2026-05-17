@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ApiController;
+use App\Http\Controllers\IotConnectionController;
 
 Route::get('/', function () {
     return redirect('/login');
@@ -27,9 +28,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/settings', [App\Http\Controllers\SettingsController::class, 'index'])->name('settings');
     Route::post('/settings/profile', [App\Http\Controllers\SettingsController::class, 'updateProfile'])->name('settings.profile');
     Route::post('/settings/device', [App\Http\Controllers\SettingsController::class, 'updateDevice'])->name('settings.device');
+    Route::post('/settings/api-base', [App\Http\Controllers\SettingsController::class, 'updateApiBase'])->name('settings.api_base');
     Route::post('/settings/password', [App\Http\Controllers\SettingsController::class, 'updatePassword'])->name('settings.password');
 
     Route::get('/analytics', [App\Http\Controllers\AnalyticsController::class, 'index'])->name('analytics');
+
+    Route::get('/dashboard/iot/status', [IotConnectionController::class, 'status'])->name('iot.status');
+    Route::post('/dashboard/iot/test', [IotConnectionController::class, 'testConnection'])->name('iot.test');
+    Route::post('/dashboard/iot/api-base', [IotConnectionController::class, 'updateApiBase'])->name('iot.api_base');
     Route::post('/sensor/data', [ApiController::class, 'receiveData']);
     Route::get('/sensor/check/{device_id}', [ApiController::class, 'checkNewData']);
 });

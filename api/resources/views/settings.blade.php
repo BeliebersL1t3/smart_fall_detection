@@ -43,6 +43,40 @@
         </div>
     </div>
 
+    @if($device)
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="p-6 border-b border-gray-50 bg-gray-50/50 flex items-center space-x-3">
+            <div class="bg-indigo-100 text-indigo-600 p-2 rounded-lg">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.14 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path></svg>
+            </div>
+            <div>
+                <h3 class="text-lg font-bold text-gray-800">ESP32 API Credentials</h3>
+                <p class="text-xs text-gray-500 font-medium">Salin ke file <code class="bg-gray-100 px-1 rounded">smart_fall_detection.ino</code></p>
+            </div>
+        </div>
+        <div class="p-6 space-y-4 text-sm">
+            <form action="{{ route('settings.api_base') }}" method="POST" class="space-y-2">
+                @csrf
+                <p class="font-bold text-gray-500 text-xs uppercase mb-1">API Base URL (ESP32)</p>
+                <input type="text" name="api_base_url" value="{{ $device->resolvedApiBaseUrl() }}"
+                       placeholder="http://192.168.1.5:8000/api"
+                       class="w-full bg-gray-50 border rounded-xl px-4 py-3 text-sm font-mono text-indigo-700 focus:ring-2 focus:ring-indigo-500 outline-none">
+                <p class="text-[10px] text-gray-500">Arduino API_BASE_URL: <code class="font-mono">{{ $device->arduinoApiRootUrl() }}</code></p>
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2 px-4 rounded-lg">Simpan API URL</button>
+            </form>
+            <div>
+                <p class="font-bold text-gray-500 text-xs uppercase mb-1">Device Token (X-Device-Token)</p>
+                <code class="block bg-gray-50 border rounded-xl px-4 py-3 break-all font-mono">{{ $device->device_token }}</code>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                <div class="bg-gray-50 rounded-lg p-3 border"><span class="font-bold text-gray-400">POST</span><br>/api/sensor-data</div>
+                <div class="bg-gray-50 rounded-lg p-3 border"><span class="font-bold text-gray-400">POST</span><br>/api/fall-detected</div>
+                <div class="bg-gray-50 rounded-lg p-3 border"><span class="font-bold text-gray-400">POST</span><br>/api/sos</div>
+            </div>
+        </div>
+    </div>
+    @endif
+
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="p-6 border-b border-gray-50 bg-gray-50/50 flex items-center space-x-3">
             <div class="bg-orange-100 text-orange-500 p-2 rounded-lg">
@@ -55,7 +89,7 @@
         </div>
         <div class="p-6">
             {{-- Sesuaikan route ini dengan fungsi update timer Anda --}}
-            <form action="/settings/device" method="POST" class="space-y-5">
+            <form action="{{ route('settings.device') }}" method="POST" class="space-y-5">
                 @csrf
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">False Alarm Countdown (Seconds)</label>

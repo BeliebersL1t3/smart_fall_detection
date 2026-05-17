@@ -81,10 +81,16 @@ class ApiController extends Controller
     {
         $device = Device::find($device_id);
         $eventCount = Event::where('device_id', $device_id)->count();
-        
+
         return response()->json([
             'count' => $eventCount,
-            'battery' => $device ? $device->battery_level : null
+            'battery' => $device?->battery_level,
+            'battery_color' => $device ? \App\Support\BatteryHelper::levelColor($device->battery_level) : null,
+            'battery_status' => $device ? \App\Support\BatteryHelper::statusLabel($device->battery_level) : null,
+            'magnitude' => $device?->last_magnitude,
+            'is_online' => (bool) ($device?->is_online),
+            'last_seen_at' => $device?->last_seen_at?->toIso8601String(),
+            'last_status' => $device?->last_status,
         ]);
     }
     

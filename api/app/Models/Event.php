@@ -10,7 +10,7 @@ class Event extends Model
     use HasFactory;
 
     protected $fillable = [
-        'device_id', 'type', 'status', 'acceleration_peak', 'occurred_at', 'resolved_at'
+        'device_id', 'type', 'status', 'acceleration_peak', 'occurred_at', 'resolved_at', 'notes',
     ];
 
     protected $casts = [

@@ -4,7 +4,9 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "ws": "node websocket/server.js",
+        "dev:full": "concurrently -n server,ws,vite -c blue,magenta,green \"php artisan serve\" \"npm run ws\" \"npm run dev\""
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.2.2",
@@ -15,6 +17,7 @@
         "vite": "^8.0.0"
     },
     "dependencies": {
-        "alpinejs": "^3.15.11"
+        "alpinejs": "^3.15.11",
+        "ws": "^8.20.1"
     }
 }

@@ -5,12 +5,12 @@
 #include <ArduinoJson.h>
 
 // ================= WiFi =================
-const char* WIFI_SSID     = "NAMA_WIFI_KAMU";
-const char* WIFI_PASSWORD = "PASSWORD_WIFI_KAMU";
+const char* WIFI_SSID     = "KONTRAKAN BARU";
+const char* WIFI_PASSWORD = "kuncipintu";
 
 // ================= Laravel API =================
-const char* API_BASE_URL  = "http://192.168.1.100:8000";   // ganti IP server Laravel kamu
-const char* API_TOKEN     = "your-api-token-here";          // Bearer token dari Laravel Sanctum
+const char* API_BASE_URL  = "http://192.168.1.5:8000";   // ganti IP server Laravel kamu
+const char* DEVICE_TOKEN  = "TOKEN_RAHASIA_123";             // dari Settings / Dashboard CareGuard
 
 // Endpoint
 const char* ENDPOINT_SENSOR  = "/api/sensor-data";    // kirim data MAG rutin
@@ -34,6 +34,13 @@ unsigned long impactTime = 0;
 
 // ================= BUTTON =================
 int lastButtonState = HIGH;
+
+// ================= BATERAI =================
+// Ganti dengan pembacaan ADC/voltage divider jika sudah di-wire
+int readBatteryPercent() {
+  // Contoh: map analogRead(BATTERY_PIN) ke 0-100
+  return 78; // placeholder — sesuaikan dengan hardware
+}
 
 // ================= INTERVAL KIRIM DATA =================
 unsigned long lastSendTime = 0;
@@ -73,7 +80,7 @@ void sendSensorData(float mag, float ax, float ay, float az) {
   http.begin(url);
 
   http.addHeader("Content-Type", "application/json");
-  http.addHeader("Authorization", String("Bearer ") + API_TOKEN);
+  http.addHeader("X-Device-Token", DEVICE_TOKEN);
   http.addHeader("Accept", "application/json");
 
   // Buat JSON payload
@@ -83,6 +90,7 @@ void sendSensorData(float mag, float ax, float ay, float az) {
   doc["ay"]        = ay;
   doc["az"]        = az;
   doc["status"]    = alarmActive ? "alarm" : "normal";
+  doc["battery"]   = readBatteryPercent();
 
   String payload;
   serializeJson(doc, payload);
@@ -109,7 +117,7 @@ void sendFallAlert(float mag) {
   http.begin(url);
 
   http.addHeader("Content-Type", "application/json");
-  http.addHeader("Authorization", String("Bearer ") + API_TOKEN);
+  http.addHeader("X-Device-Token", DEVICE_TOKEN);
   http.addHeader("Accept", "application/json");
 
   StaticJsonDocument<200> doc;
@@ -142,7 +150,7 @@ void sendSOSAlert(bool isActive) {
   http.begin(url);
 
   http.addHeader("Content-Type", "application/json");
-  http.addHeader("Authorization", String("Bearer ") + API_TOKEN);
+  http.addHeader("X-Device-Token", DEVICE_TOKEN);
   http.addHeader("Accept", "application/json");
 
   StaticJsonDocument<200> doc;

@@ -28,7 +28,7 @@
                 <div class="bg-yellow-100 text-yellow-600 p-3 rounded-full"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
                 <div>
                     <h2 class="text-xl font-bold text-gray-800">Fall Detected - Pending Verification</h2>
-                    <p class="text-sm text-gray-500">Location: {{ $randomRoom }} | Time left: <span class="font-bold text-yellow-600" x-text="timeLeft + 's'"></span></p>
+                    <p class="text-sm text-gray-500">Location: {{ $deviceLocation }} | Time left: <span class="font-bold text-yellow-600" x-text="timeLeft + 's'"></span></p>
                 </div>
             </div>
             <form action="{{ route('event.false_alarm', $latestEvent->id) }}" method="POST">
@@ -67,7 +67,7 @@
                 </div>
                 <div>
                     <h2 class="text-2xl font-bold">EMERGENCY: Immediate Attention Required</h2>
-                    <p class="text-red-100">Location: {{ $randomRoom }} @if($latestEvent->acceleration_peak) | Impact: <strong class="text-white">{{ number_format($latestEvent->acceleration_peak, 2) }} G</strong> @endif</p>
+                    <p class="text-red-100">Location: {{ $deviceLocation }} @if($latestEvent->acceleration_peak) | Impact: <strong class="text-white">{{ number_format($latestEvent->acceleration_peak, 2) }} G</strong> @endif</p>
                 </div>
             </div>
             <button type="button" @click="stopAlarm(); showEmergency = false; fetch('{{ route('event.dismiss', $latestEvent->id) }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json', 'Accept': 'application/json' }});" class="bg-white text-red-500 hover:bg-red-50 font-bold py-2 px-6 rounded-lg shadow transition flex items-center">
@@ -78,6 +78,9 @@
     </div>
     @endif
 
+    @include('partials.iot-connection')
+
+    @if(config('app.debug'))
     <div class="bg-indigo-50 border border-dashed border-indigo-300 rounded-xl p-5 relative">
         <div class="flex items-center justify-between">
             <div>
@@ -99,6 +102,7 @@
             </div>
         </div>
     </div>
+    @endif
 
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 pt-6">
         <div class="bg-white rounded-xl shadow-sm relative p-4 border border-gray-100">
@@ -115,23 +119,16 @@
             </div>
             <hr class="mt-4 border-gray-100">
             <div class="mt-3 text-xs text-gray-400 flex items-center">
-                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Synced {{ $device->updated_at->diffForHumans() }}
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                @if($device->last_seen_at)
+                    Terakhir kirim {{ $device->last_seen_at->diffForHumans() }}
+                @else
+                    Belum ada data dari ESP32
+                @endif
             </div>
         </div>
 
-        <div class="bg-white rounded-xl shadow-sm relative p-4 border border-gray-100">
-            <div class="absolute -top-6 left-4 bg-green-500 rounded-xl p-4 shadow-lg shadow-green-500/40 text-white">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-            </div>
-            <div class="text-right pt-2">
-                <p class="text-sm text-gray-500 font-medium">Battery Level</p>
-                <h4 class="text-2xl font-bold text-gray-800">{{ $device->battery_level }}%</h4>
-            </div>
-            <hr class="mt-4 border-gray-100">
-            <div class="mt-3 w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
-                <div class="bg-green-500 h-1.5 rounded-full" style="width: {{ $device->battery_level }}%"></div>
-            </div>
-        </div>
+        @include('partials.battery-monitor')
 
         <a href="{{ route('dashboard', ['filter' => 'emergencies']) }}#history-table" class="block bg-white rounded-xl shadow-sm relative p-4 border border-gray-100 hover:shadow-md hover:-translate-y-1 transition-all duration-200 group cursor-pointer">
             <div class="absolute -top-6 left-4 bg-red-500 rounded-xl p-4 shadow-lg shadow-red-500/40 text-white group-hover:scale-110 transition-transform">
@@ -390,23 +387,4 @@
     });
 </script>
 
-<script>
-    (function() {
-        let currentEventCount = {{ $totalEvents }};
-        let currentBattery = {{ $device->battery_level ?? 0 }};
-        const deviceId = {{ $device->id ?? 0 }};
-        
-        setInterval(() => {
-            if (deviceId !== 0) {
-                fetch('/api/sensor/check/' + deviceId)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.count > currentEventCount || data.battery != currentBattery) {
-                            window.location.reload();
-                        }
-                    }).catch(error => {});
-            }
-        }, 2000);
-    })();
-</script>
 @endpush

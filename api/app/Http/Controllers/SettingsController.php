@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Device;
+use App\Support\IotUrl;
 
 class SettingsController extends Controller
 {
@@ -47,7 +48,7 @@ class SettingsController extends Controller
     public function updateDevice(Request $request)
     {
         $request->validate([
-            'immobility_duration' => 'required|integer|min:5|max:120', // Batasi 5 detik sampai 2 menit
+            'immobility_duration' => 'required|integer|min:5|max:120',
         ]);
 
         $device = Device::where('user_id', Auth::id())->first();
@@ -56,6 +57,20 @@ class SettingsController extends Controller
         }
 
         return redirect()->back()->with('success', 'Pengaturan perangkat berhasil diperbarui!');
+    }
+
+    public function updateApiBase(Request $request)
+    {
+        $request->validate([
+            'api_base_url' => 'required|string|max:255',
+        ]);
+
+        $device = Device::where('user_id', Auth::id())->firstOrFail();
+        $device->update([
+            'api_base_url' => IotUrl::normalizeApiBase($request->api_base_url),
+        ]);
+
+        return redirect()->back()->with('success', 'API Base URL disimpan untuk ESP32.');
     }
 
     /**
