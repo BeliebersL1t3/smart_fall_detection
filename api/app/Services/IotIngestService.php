@@ -16,47 +16,52 @@ class IotIngestService
     ) {}
 
     public function ingestTelemetry(Device $device, array $data): array
-    {
-        $updates = [
-            'is_online' => true,
-            'last_magnitude' => $data['magnitude'] ?? null,
-            'last_ax' => $data['ax'] ?? null,
-            'last_ay' => $data['ay'] ?? null,
-            'last_az' => $data['az'] ?? null,
-            'last_status' => $data['status'] ?? 'normal',
-            'last_seen_at' => now(),
-        ];
+{
+    $updates = [
+        'is_online' => true,
+        'last_magnitude' => $data['magnitude'] ?? null,
+        'last_ax' => $data['ax'] ?? null,
+        'last_ay' => $data['ay'] ?? null,
+        'last_az' => $data['az'] ?? null,
+        'last_status' => $data['status'] ?? 'normal',
+        'last_seen_at' => now(),
+    ];
 
-        $battery = BatteryHelper::fromPayload($data);
-        if ($battery !== null) {
-            $updates['battery_level'] = $battery;
-        }
-
-        $device->update($updates);
-        $device->refresh();
-
-        $charging = (bool) ($data['charging'] ?? false);
-
-        $payload = [
-            'device_id' => $device->id,
-            'magnitude' => $device->last_magnitude,
-            'ax' => $device->last_ax,
-            'ay' => $device->last_ay,
-            'az' => $device->last_az,
-            'status' => $device->last_status,
-            'battery' => $device->battery_level,
-            'battery_level' => $device->battery_level,
-            'battery_color' => BatteryHelper::levelColor($device->battery_level),
-            'battery_status' => BatteryHelper::statusLabel($device->battery_level, $charging),
-            'charging' => $charging,
-            'is_online' => true,
-            'last_seen_at' => $device->last_seen_at?->toIso8601String(),
-        ];
-
-        $this->notifier->broadcast($device->user_id, 'telemetry', $payload);
-
-        return $payload;
+    $battery = BatteryHelper::fromPayload($data);
+    if ($battery !== null) {
+        $updates['battery_level'] = $battery;
     }
+
+    $device->update($updates);
+    $device->refresh();
+
+    $charging = (bool) ($data['charging'] ?? false);
+
+    // Payload yang akan dikirim balik ke ESP32 dan di-broadcast ke Dashboard
+    $payload = [
+        'device_id' => $device->id,
+        'magnitude' => $device->last_magnitude,
+        'ax' => $device->last_ax,
+        'ay' => $device->last_ay,
+        'az' => $device->last_az,
+        'status' => $device->last_status,
+        'battery' => $device->battery_level,
+        'battery_level' => $device->battery_level,
+        'battery_color' => BatteryHelper::levelColor($device->battery_level),
+        'battery_status' => BatteryHelper::statusLabel($device->battery_level, $charging),
+        'charging' => $charging,
+        'is_online' => true,
+        'last_seen_at' => $device->last_seen_at?->toIso8601String(),
+        
+        // --- LOGIKA DISMISS ---
+        // Jika status di DB sudah 'normal', kirim perintah false ke ESP32 agar buzzer mati
+        'command_buzzer' => ($device->last_status === 'alarm'),
+    ];
+
+    $this->notifier->broadcast($device->user_id, 'telemetry', $payload);
+
+    return $payload;
+}
 
     public function ingestFall(Device $device, ?float $magnitude): Event
     {

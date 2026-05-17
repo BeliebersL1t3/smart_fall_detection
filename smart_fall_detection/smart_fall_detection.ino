@@ -4,53 +4,74 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 
-// ================= WiFi =================
+// =====================================================
+// WIFI
+// =====================================================
 const char* WIFI_SSID     = "KONTRAKAN BARU";
 const char* WIFI_PASSWORD = "kuncipintu";
 
-// ================= Laravel API =================
-const char* API_BASE_URL  = "http://192.168.1.5:8000";   // ganti IP server Laravel kamu
-const char* DEVICE_TOKEN  = "TOKEN_RAHASIA_123";             // dari Settings / Dashboard CareGuard
+// =====================================================
+// LARAVEL API
+// =====================================================
+const char* API_BASE_URL  = "http://192.168.1.5:8000";
+const char* DEVICE_TOKEN  = "TOKEN_RAHASIA_123";
 
-// Endpoint
-const char* ENDPOINT_SENSOR  = "/api/sensor-data";    // kirim data MAG rutin
-const char* ENDPOINT_FALL     = "/api/fall-detected";  // kirim saat jatuh terdeteksi
-const char* ENDPOINT_SOS      = "/api/sos";            // kirim saat tombol SOS ditekan
+// =====================================================
+// ENDPOINT
+// =====================================================
+const char* ENDPOINT_SENSOR = "/api/sensor-data";
+const char* ENDPOINT_FALL   = "/api/fall-detected";
+const char* ENDPOINT_SOS    = "/api/sos";
 
-// ================= PIN =================
-#define SDA_PIN    22
-#define SCL_PIN    23
-#define BUZZER_PIN 33
-#define SOS_BUTTON 25
+// =====================================================
+// PIN CONFIG
+// =====================================================
+#define SDA_PIN        22
+#define SCL_PIN        23
 
-// ================= FALL DETECTION =================
+#define BUZZER_PIN     33
+#define SOS_BUTTON     25
+
+#define BATTERY_PIN    34
+
+// =====================================================
+// FALL DETECTION CONFIG
+// =====================================================
 float impactThreshold   = 2.8;
 float movementThreshold = 1.2;
+
 unsigned long immobilityTime = 3000;
 
 bool impactDetected = false;
-bool alarmActive    = false;
+
+bool fallAlarm = false;
+bool sosAlarm  = false;
+
 unsigned long impactTime = 0;
 
-// ================= BUTTON =================
+// =====================================================
+// BUTTON
+// =====================================================
 int lastButtonState = HIGH;
 
-// ================= BATERAI =================
-// Ganti dengan pembacaan ADC/voltage divider jika sudah di-wire
-int readBatteryPercent() {
-  // Contoh: map analogRead(BATTERY_PIN) ke 0-100
-  return 78; // placeholder — sesuaikan dengan hardware
+// =====================================================
+// TIMER
+// =====================================================
+unsigned long lastSendTime = 0;
+const unsigned long sendInterval = 2000;
+
+// =====================================================
+// GET FINAL ALARM STATE
+// =====================================================
+bool getAlarmState() {
+  return fallAlarm || sosAlarm;
 }
 
-// ================= INTERVAL KIRIM DATA =================
-unsigned long lastSendTime = 0;
-const unsigned long sendInterval = 2000; // kirim data sensor tiap 2 detik
-
-// ================================================
-// FUNGSI: Koneksi WiFi
-// ================================================
+// =====================================================
+// WIFI CONNECT
+// =====================================================
 void connectWiFi() {
-  Serial.print("Connecting to WiFi");
+  Serial.print("Connecting WiFi");
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
   int retry = 0;
@@ -61,36 +82,65 @@ void connectWiFi() {
   }
 
   if (WiFi.status() == WL_CONNECTED) {
-    Serial.println("\n✅ WiFi Connected!");
+    Serial.println("\n✅ WiFi Connected");
     Serial.print("IP Address: ");
     Serial.println(WiFi.localIP());
   } else {
-    Serial.println("\n❌ WiFi GAGAL! Cek SSID/Password.");
+    Serial.println("\n❌ WiFi Failed");
   }
 }
 
-// ================================================
-// FUNGSI: Kirim data sensor (rutin)
-// ================================================
-void sendSensorData(float mag, float ax, float ay, float az) {
+// =====================================================
+// READ BATTERY (REAL-TIME)
+// =====================================================
+float readBatteryPercentage() {
+  // 1. Baca nilai ADC dari pin baterai (ESP32 default 12-bit: 0 - 4095)
+  int adcValue = analogRead(BATTERY_PIN);
+  
+  // 2. Ubah nilai ADC menjadi tegangan fisik yang masuk ke pin ESP32 (0 - 3.3V)
+  float pinVoltage = (adcValue / 4095.0) * 3.3;
+  
+  // 3. Hitung tegangan baterai asli berdasarkan rasio resistor divider.
+  // Jika menggunakan R1 = 10k Ohm dan R2 = 10k Ohm, pembagian tegangannya adalah setengahnya.
+  // Kalibrasi faktor pengali (2.0) ini sesuai dengan hasil ukur multimeter jika diperlukan.
+  float batteryVoltage = pinVoltage * 2.0; 
+  
+  // 4. Konversi tegangan baterai ke rentang persentase (Asumsi Li-ion / LiPo 1S)
+  // Tegangan penuh (100%) = 4.2V, Tegangan kosong (0%) = 3.3V
+  float percentage = ((batteryVoltage - 3.3) / (4.2 - 3.3)) * 100.0;
+  
+  // 5. Batasi nilai persentase agar tetap berada di rentang aman 0% hingga 100%
+  if (percentage > 100.0) percentage = 100.0;
+  if (percentage < 0.0)   percentage = 0.0;
+  
+  // Tampilkan data ke Serial Monitor untuk keperluan monitoring/kalibrasi
+  Serial.printf("[BATTERY] ADC: %d | Pin V: %.2fV | Bat V: %.2fV | %0.1f%%\n", 
+                adcValue, pinVoltage, batteryVoltage, percentage);
+
+  return percentage;
+}
+
+// =====================================================
+// SEND SENSOR DATA
+// =====================================================
+void sendSensorData(float mag, float ax, float ay, float az, float battery) {
   if (WiFi.status() != WL_CONNECTED) return;
 
   HTTPClient http;
   String url = String(API_BASE_URL) + ENDPOINT_SENSOR;
-  http.begin(url);
 
+  http.begin(url);
   http.addHeader("Content-Type", "application/json");
   http.addHeader("X-Device-Token", DEVICE_TOKEN);
   http.addHeader("Accept", "application/json");
 
-  // Buat JSON payload
-  StaticJsonDocument<200> doc;
+  StaticJsonDocument<256> doc;
   doc["magnitude"] = mag;
-  doc["ax"]        = ax;
-  doc["ay"]        = ay;
-  doc["az"]        = az;
-  doc["status"]    = alarmActive ? "alarm" : "normal";
-  doc["battery"]   = readBatteryPercent();
+  doc["ax"] = ax;
+  doc["ay"] = ay;
+  doc["az"] = az;
+  doc["battery"] = battery;
+  doc["status"] = getAlarmState() ? "alarm" : "normal";
 
   String payload;
   serializeJson(doc, payload);
@@ -98,86 +148,124 @@ void sendSensorData(float mag, float ax, float ay, float az) {
   int httpCode = http.POST(payload);
 
   if (httpCode == 200 || httpCode == 201) {
-    Serial.println("📡 Data sensor terkirim ke Laravel");
+    // --- BAGIAN BARU: MEMBACA RESPON SERVER ---
+    String responseBody = http.getString();
+    StaticJsonDocument<512> resDoc;
+    DeserializationError error = deserializeJson(resDoc, responseBody);
+
+    if (!error) {
+      // Ambil perintah buzzer dari server (command_buzzer yang kita buat di Laravel tadi)
+      bool shouldBuzzerBeOn = resDoc["telemetry"]["command_buzzer"]; 
+
+      // Jika di ESP32 alarm masih nyala (lokal), tapi server bilang "false" (dismissed)
+      if (getAlarmState() == true && shouldBuzzerBeOn == false) {
+        Serial.println("🔕 ALARM DISMISSED FROM DASHBOARD!");
+        
+        // Matikan semua flag alarm di ESP32
+        fallAlarm = false;
+        sosAlarm = false;
+        impactDetected = false;
+        
+        // Matikan buzzer secara fisik
+        digitalWrite(BUZZER_PIN, LOW);
+      }
+    }
+    // ------------------------------------------
+    Serial.println("📡 Data sent & Sync success");
   } else {
-    Serial.printf("⚠️  Gagal kirim sensor, HTTP: %d\n", httpCode);
+    Serial.printf("⚠️ HTTP Error: %d\n", httpCode);
   }
 
   http.end();
 }
 
-// ================================================
-// FUNGSI: Kirim notifikasi FALL DETECTED
-// ================================================
+// =====================================================
+// SEND FALL ALERT
+// =====================================================
 void sendFallAlert(float mag) {
-  if (WiFi.status() != WL_CONNECTED) return;
+  if (WiFi.status() != WL_CONNECTED)
+    return;
 
   HTTPClient http;
   String url = String(API_BASE_URL) + ENDPOINT_FALL;
-  http.begin(url);
 
+  http.begin(url);
   http.addHeader("Content-Type", "application/json");
   http.addHeader("X-Device-Token", DEVICE_TOKEN);
-  http.addHeader("Accept", "application/json");
 
-  StaticJsonDocument<200> doc;
-  doc["event"]     = "fall_detected";
+  StaticJsonDocument<256> doc;
+  doc["event"] = "fall_detected";
   doc["magnitude"] = mag;
-  doc["message"]   = "Pengguna terdeteksi jatuh!";
+  doc["message"] = "Pengguna terdeteksi jatuh!";
+  doc["active"] = true;
 
   String payload;
   serializeJson(doc, payload);
 
   int httpCode = http.POST(payload);
+  Serial.print("HTTP FALL: ");
+  Serial.println(httpCode);
 
   if (httpCode == 200 || httpCode == 201) {
-    Serial.println("🆘 Fall alert terkirim ke Laravel!");
+    Serial.println("🆘 FALL alert sent!");
   } else {
-    Serial.printf("⚠️  Gagal kirim fall alert, HTTP: %d\n", httpCode);
+    Serial.printf("⚠️ Fall Error: %d\n", httpCode);
   }
 
   http.end();
 }
 
-// ================================================
-// FUNGSI: Kirim notifikasi SOS
-// ================================================
+// =====================================================
+// SEND SOS ALERT
+// =====================================================
 void sendSOSAlert(bool isActive) {
-  if (WiFi.status() != WL_CONNECTED) return;
+  if (WiFi.status() != WL_CONNECTED)
+    return;
 
   HTTPClient http;
   String url = String(API_BASE_URL) + ENDPOINT_SOS;
-  http.begin(url);
 
+  http.begin(url);
   http.addHeader("Content-Type", "application/json");
   http.addHeader("X-Device-Token", DEVICE_TOKEN);
   http.addHeader("Accept", "application/json");
 
-  StaticJsonDocument<200> doc;
-  doc["event"]   = isActive ? "sos_active" : "sos_cancelled";
+  StaticJsonDocument<256> doc;
+  doc["event"] = isActive ? "sos_active" : "sos_cancelled";
   doc["message"] = isActive ? "Tombol SOS ditekan!" : "Alarm SOS dibatalkan";
+  doc["active"] = isActive;
 
   String payload;
   serializeJson(doc, payload);
 
   int httpCode = http.POST(payload);
+  Serial.print("HTTP SOS: ");
+  Serial.println(httpCode);
 
   if (httpCode == 200 || httpCode == 201) {
-    Serial.println("📲 SOS alert terkirim ke Laravel!");
+    Serial.println("📲 SOS alert sent!");
   } else {
-    Serial.printf("⚠️  Gagal kirim SOS, HTTP: %d\n", httpCode);
+    Serial.printf("⚠️ SOS Error: %d\n", httpCode);
   }
 
   http.end();
 }
 
-// ================= SETUP =================
+// =====================================================
+// SETUP
+// =====================================================
 void setup() {
   Serial.begin(115200);
   delay(1000);
 
-  // I2C MPU6050
+  // MPU6050 I2C
   Wire.begin(SDA_PIN, SCL_PIN);
+
+  // WAKE UP MPU6050
+  Wire.beginTransmission(0x68);
+  Wire.write(0x6B);
+  Wire.write(0);
+  Wire.endTransmission(true);
 
   // BUZZER
   pinMode(BUZZER_PIN, OUTPUT);
@@ -186,28 +274,26 @@ void setup() {
   // BUTTON
   pinMode(SOS_BUTTON, INPUT_PULLUP);
 
-  // WAKE MPU6050
-  Wire.beginTransmission(0x68);
-  Wire.write(0x6B);
-  Wire.write(0);
-  Wire.endTransmission(true);
+  // ADC CONFIGURATION
+  analogReadResolution(12); // Pastikan resolusi ADC ESP32 di-set ke 12-bit (0-4095)
 
   Serial.println("=================================");
-  Serial.println(" SMART FALL DETECTION SYSTEM    ");
+  Serial.println(" SMART FALL DETECTION SYSTEM ");
   Serial.println("=================================");
 
-  // Koneksi WiFi
   connectWiFi();
 
-  Serial.println("System Ready...");
+  Serial.println("✅ SYSTEM READY");
 }
 
-// ================= LOOP =================
+// =====================================================
+// LOOP
+// =====================================================
 void loop() {
-
-  // Reconnect WiFi jika putus
+  // =========================================
+  // WIFI RECONNECT
+  // =========================================
   if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("⚠️  WiFi putus, reconnecting...");
     connectWiFi();
   }
 
@@ -216,7 +302,13 @@ void loop() {
   // =========================================
   Wire.beginTransmission(0x68);
   Wire.write(0x3B);
-  Wire.endTransmission(false);
+
+  if (Wire.endTransmission(false) != 0) {
+    Serial.println("❌ MPU6050 NOT DETECTED");
+    delay(1000);
+    return;
+  }
+
   Wire.requestFrom(0x68, 6, true);
 
   int16_t ax_raw = Wire.read() << 8 | Wire.read();
@@ -227,23 +319,29 @@ void loop() {
   float ay_g = ay_raw / 16384.0;
   float az_g = az_raw / 16384.0;
 
-  float magnitude = sqrt(
-    (ax_g * ax_g) +
-    (ay_g * ay_g) +
-    (az_g * az_g)
-  );
-
   // =========================================
-  // SERIAL MONITOR
+  // MAGNITUDE
   // =========================================
+  float magnitude = sqrt((ax_g * ax_g) + (ay_g * ay_g) + (az_g * az_g));
   Serial.print("MAG: ");
   Serial.println(magnitude);
 
   // =========================================
-  // KIRIM DATA SENSOR RUTIN (tiap 2 detik)
+  // BATTERY (REAL-TIME)
+  // =========================================
+  int batteryPercentage = (int)readBatteryPercentage(); 
+
+  // =========================================
+  // SEND SENSOR DATA PERIODICALLY
   // =========================================
   if (millis() - lastSendTime >= sendInterval) {
-    sendSensorData(magnitude, ax_g, ay_g, az_g);
+    sendSensorData(
+      magnitude,
+      ax_g,
+      ay_g,
+      az_g,
+      batteryPercentage
+    );
     lastSendTime = millis();
   }
 
@@ -265,11 +363,9 @@ void loop() {
     if (elapsedTime > immobilityTime) {
       if (magnitude < movementThreshold) {
         Serial.println("🆘 FALL DETECTED!");
-        alarmActive = true;
-
-        // Kirim ke Laravel
+        fallAlarm = true;
+        digitalWrite(BUZZER_PIN, HIGH);
         sendFallAlert(magnitude);
-
       } else {
         Serial.println("❌ FALSE ALARM");
       }
@@ -278,31 +374,42 @@ void loop() {
   }
 
   // =========================================
-  // BUTTON SOS (TOGGLE)
+  // SOS BUTTON
   // =========================================
   int currentButtonState = digitalRead(SOS_BUTTON);
 
   if (lastButtonState == HIGH && currentButtonState == LOW) {
-    alarmActive = !alarmActive;
+    sosAlarm = !sosAlarm;
 
-    if (alarmActive) {
-      Serial.println("🔴 EMERGENCY BUTTON PRESSED");
+    if (sosAlarm) {
+      Serial.println("🔴 EMERGENCY BUTTON");
     } else {
       Serial.println("🟢 ALERT CANCELLED");
+      // RESET ALL
+      fallAlarm = false;
+      sosAlarm  = false;
     }
 
-    // Kirim ke Laravel
-    sendSOSAlert(alarmActive);
+    // BUZZER LANGSUNG RESPON
+    digitalWrite(BUZZER_PIN, getAlarmState() ? HIGH : LOW);
 
-    delay(200);
+    // KIRIM SOS
+    sendSOSAlert(sosAlarm);
+
+    // UPDATE STATUS DASHBOARD LANGSUNG
+    sendSensorData(
+      magnitude,
+      ax_g,
+      ay_g,
+      az_g,
+      batteryPercentage
+    );
   }
 
   lastButtonState = currentButtonState;
 
   // =========================================
-  // BUZZER CONTROL
+  // FINAL BUZZER CONTROL
   // =========================================
-  digitalWrite(BUZZER_PIN, alarmActive ? HIGH : LOW);
-
-  delay(200);
+  digitalWrite(BUZZER_PIN, getAlarmState() ? HIGH : LOW);
 }
