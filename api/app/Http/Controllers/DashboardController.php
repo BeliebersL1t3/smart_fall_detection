@@ -197,10 +197,15 @@ class DashboardController extends Controller
             default => $query
         };
 
-        $events = $query->take(50)->get();
+        $limit = $request->query('limit', 10);
+        if ($limit !== 'all') {
+            $query->take((int)$limit);
+        }
+        $events = $query->get();
 
         $pdf = Pdf::loadView('pdf.history', ['events' => $events, 'filter' => $filter]);
-        return $pdf->download('Fall_History_' . strtoupper($filter) . '.pdf');
+        $fileName = 'Fall_History_' . strtoupper($filter) . '_' . now()->format('Ymd_His') . '.pdf';
+        return $pdf->download($fileName);
     }
 
     public function exportExcel(Request $request)
@@ -219,15 +224,40 @@ class DashboardController extends Controller
             default => $query
         };
 
+        $limit = $request->query('limit', 10);
+        if ($limit !== 'all') {
+            $query->take((int)$limit);
+        }
         $events = $query->get();
-        $fileName = 'CareGuard_Data_' . now()->format('Ymd_His') . '.xls';
+        
+        $fileName = 'CareGuard_Data_' . strtoupper($filter) . '_' . now()->format('Ymd_His') . '.xls';
         $headers = [
             "Content-type" => "application/vnd.ms-excel",
             "Content-Disposition" => "attachment; filename=$fileName",
         ];
 
         $html = '<table border="1">';
-        // ... (sisanya sama dengan kode lama anda)
+        $html .= '<thead><tr>';
+        $html .= '<th>Date & Time<       width="150px"</th>';
+        $html .= '<th>Type<       width="100px"</th>';
+        $html .= '<th>Impact (G)<       width="100px"</th>';
+        $html .= '<th>Status<       width="100px"</th>';
+        $html .= '<th>Notes / Action Taken<       width="100px"</th>';
+        $html .= '</tr></thead><style>';
+        $html .= '.type-fall { background-color: #f8d7da; color: #721c24; }';
+        $html .= '.type-sos { background-color: #d4edda; color: #155724; }';
+        $html .= '</style>';
+        $html .= '<tbody>';
+        foreach ($events as $event) {
+            $html .= '<tr>';
+            $html .= '<td>' . $event->occurred_at->format('M d, Y - H:i:s') . '</td>';
+            $html .= '<td class="' . ($event->type == 'auto_fall' ? 'type-fall' : 'type-sos') . '">' . ($event->type == 'auto_fall' ? 'FALL' : 'SOS') . '</td>';
+            $html .= '<td>' . ($event->acceleration_peak ? number_format($event->acceleration_peak, 2) . ' G' : '-') . '</td>';
+            $html .= '<td>' . strtoupper(str_replace('_', ' ', $event->status)) . '</td>';
+            $html .= '<td style="font-size: 10px; font-style: italic;">' . ($event->notes ?? '-') . '</td>';
+            $html .= '</tr>';
+        }
+        $html .= '</tbody>';
         $html .= '</table>';
 
         return response($html, 200, $headers);

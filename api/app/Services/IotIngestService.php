@@ -157,8 +157,13 @@ class IotIngestService
     private function sendTelegramAlert(Event $event): void
     {
         $botToken = env('TELEGRAM_BOT_TOKEN');
-        $chatId = env('TELEGRAM_CHAT_ID');
+        
+        // 🌟 AMBIL CHAT ID DARI DATABASE (Bukan dari .env lagi)
+        // Kita cari User siapa yang memiliki perangkat pembuat event ini
+        $device = $event->device()->with('user')->first();
+        $chatId = $device?->user?->telegram_chat_id;
 
+        // Batalkan jika Token Bot tidak ada ATAU jika User belum mengatur Telegram ID di Settings
         if (! $botToken || ! $chatId) {
             return;
         }
