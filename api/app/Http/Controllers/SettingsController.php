@@ -91,4 +91,17 @@ class SettingsController extends Controller
 
         return redirect()->back()->with('success', 'Password berhasil diubah!');
     }
+    public function updateTelegram(Request $request)
+    {
+        $request->validate([
+            'telegram_chat_id' => 'nullable|string|max:50',
+        ]);
+
+        $user = auth()->user();
+        $user->update([
+            'telegram_chat_id' => $request->telegram_chat_id,
+        ]);
+
+        return redirect()->back()->with('success', 'Telegram Chat ID berhasil diperbarui! Notifikasi darurat kini akan dikirim ke akun tersebut.');
+    }
 }

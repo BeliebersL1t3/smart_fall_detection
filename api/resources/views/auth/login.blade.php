@@ -1,56 +1,67 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Fall Detection System</title>
+    <title>CareGuard - Login</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script>
+        if (localStorage.getItem('careguard-theme') === 'dark' || (!('careguard-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
 </head>
-<body class="bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 min-h-screen flex items-center justify-center font-sans antialiased">
+<body class="h-full bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-300 flex items-center justify-center p-4">
 
-    <div class="w-full max-w-md">
+    <div class="w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 p-8 relative overflow-hidden transition-colors duration-300">
+
+        <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-400"></div>
+
         <div class="text-center mb-8">
-            <div class="bg-white inline-block p-3 rounded-2xl shadow-lg mb-4 text-brand-purple">
-                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            <div class="inline-flex bg-gradient-to-tr from-orange-500 to-amber-400 p-2.5 rounded-xl shadow-lg shadow-orange-500/20 text-white mb-3">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
             </div>
-            <h1 class="text-3xl font-bold text-white">Fall Detection System</h1>
-            <p class="text-blue-100 mt-1">Caregiver Deployment Login</p>
+            <h2 class="text-2xl font-extrabold tracking-tight">Masuk ke CareGuard</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Sistem Pemantau Lansia Terintegrasi</p>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-2xl p-8">
-            <form method="POST" action="{{ route('login') }}" class="space-y-6">
-                @csrf
-                
-                @error('email')
-                    <div class="bg-red-50 text-red-500 text-sm p-3 rounded-lg">{{ $message }}</div>
-                @enderror
+        @if ($errors->any())
+            <div class="mb-4 p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-xl text-xs text-red-600 dark:text-red-400 space-y-1">
+                @foreach ($errors->all() as $error)
+                    <p>- {{ $error }}</p>
+                @endforeach
+            </div>
+        @endif
 
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                        </div>
-                        <input type="email" name="email" value="{{ old('email') }}" required autofocus class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-purple focus:border-transparent outline-none transition" placeholder="caregiver@smartfall.test">
-                    </div>
-                </div>
+        <form action="{{ route('login') }}" method="POST" class="space-y-4">
+            @csrf
 
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                        </div>
-                        <input type="password" name="password" required class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-purple focus:border-transparent outline-none transition" placeholder="••••••••">
-                    </div>
-                </div>
+            <div>
+                <label for="email" class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Alamat Email</label>
+                <input type="email" name="email" id="email" value="{{ old('email') }}" required autofocus placeholder="nama@email.com"
+                       class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 text-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-orange-500 outline-none transition-colors text-sm">
+            </div>
 
-                <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-brand-purple hover:opacity-90 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition">
-                    Sign In
+            <div>
+                <label for="password" class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Password</label>
+                <input type="password" name="password" id="password" required placeholder="Masukkan password Anda"
+                       class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 text-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-orange-500 outline-none transition-colors text-sm">
+            </div>
+
+            <div class="pt-2">
+                <button type="submit" class="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-orange-500/20 transition-all transform hover:-translate-y-0.5 text-sm">
+                    Masuk
                 </button>
-            </form>
+            </div>
+        </form>
 
+        <div class="mt-6 text-center text-xs text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-800 pt-4">
+            Belum punya akun?
+            <a href="{{ route('register') }}" class="text-orange-500 hover:underline font-bold ml-1">Daftar di sini</a>
         </div>
     </div>
+
 </body>
 </html>
