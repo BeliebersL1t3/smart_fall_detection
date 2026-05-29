@@ -10,9 +10,13 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\EmergencyAlertMail;
 use Illuminate\Support\Facades\Http;
+use App\Services\IotIngestService;
 
 class DashboardController extends Controller
 {
+    public function __construct(
+        private IotIngestService $iotIngest
+    ) {}
     public function index(Request $request)
     {
         $device = Device::with('user')->where('user_id', Auth::id())->first();
@@ -77,29 +81,20 @@ class DashboardController extends Controller
             'notes' => 'required|string|max:500',
         ]);
 
-        $event = Event::findOrFail($id);
-        $event->update([
-            'status' => 'resolved_by_caregiver',
-            'notes' => $request->notes,
-            'resolved_at' => now()
-        ]);
+        $event = Event::whereHas('device', fn ($q) => $q->where('user_id', Auth::id()))
+            ->findOrFail($id);
 
-        // MATIKAN BUZZER: Update status device ke normal
-        $event->device->update(['last_status' => 'normal']);
+        $this->iotIngest->resolveEventByCaregiver($event, 'resolved', $request->notes);
 
         return redirect()->back()->with('success', 'Kejadian telah diselesaikan dengan catatan.');
     }
 
     public function markFalseAlarm($id)
     {
-        $event = Event::findOrFail($id);
-        $event->update([
-            'status' => 'false_alarm',
-            'resolved_at' => now()
-        ]);
+        $event = Event::whereHas('device', fn ($q) => $q->where('user_id', Auth::id()))
+            ->findOrFail($id);
 
-        // MATIKAN BUZZER: Update status device ke normal
-        $event->device->update(['last_status' => 'normal']);
+        $this->iotIngest->resolveEventByCaregiver($event, 'false_alarm');
 
         return redirect()->back()->with('success', 'Alert ditandai sebagai False Alarm.');
     }
