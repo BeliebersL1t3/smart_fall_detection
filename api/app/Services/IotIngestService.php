@@ -232,7 +232,5 @@ class IotIngestService
             'battery' => $device->battery_level,
             'battery_level' => $device->battery_level,
         ]);
-
-        return $event->fresh();
     }
 }
