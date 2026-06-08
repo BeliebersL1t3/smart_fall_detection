@@ -159,6 +159,39 @@ class IotIngestService
     {
         $dbStatus = $status === 'resolved' ? 'resolved_by_caregiver' : 'false_alarm';
 
+        $event->update([
+            'status' => $dbStatus,
+            'notes' => $notes,
+            'resolved_at' => now(),
+        ]);
+
+        $device = $event->device;
+        $device->update(['last_status' => 'normal']);
+        $device->refresh();
+
+        $this->notifier->broadcast($device->user_id, 'alarm_dismissed', [
+            'event_id' => $event->id,
+            'device_id' => $device->id,
+            'status' => $dbStatus,
+            'command_buzzer' => false,
+        ]);
+
+        $this->notifier->broadcast($device->user_id, 'telemetry', [
+            'device_id' => $device->id,
+            'status' => 'normal',
+            'command_buzzer' => false,
+            'is_online' => $device->is_online,
+            'battery' => $device->battery_level,
+            'battery_level' => $device->battery_level,
+        ]);
+
+        return $event->fresh();
+    }
+
+    private function sendTelegramAlert(Event $event): void
+    {
+        $dbStatus = $status === 'resolved' ? 'resolved_by_caregiver' : 'false_alarm';
+
         // Telegram notification logic
         $botToken = env('TELEGRAM_BOT_TOKEN');
         
