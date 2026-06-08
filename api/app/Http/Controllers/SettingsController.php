@@ -95,29 +95,4 @@ class SettingsController extends Controller
 
         return redirect()->back()->with('success', 'Password berhasil diubah!');
     }
-
-    public function updateTelegram(Request $request)
-    {
-        $request->validate([
-            'telegram_bot_token' => 'nullable|string|max:255',
-            'telegram_chat_id' => 'nullable|string|max:50',
-        ]);
-
-        $env = app(EnvFileWriter::class);
-        $user = auth()->user();
-
-        if ($request->filled('telegram_bot_token')) {
-            $env->set('TELEGRAM_BOT_TOKEN', $request->telegram_bot_token);
-        }
-
-        if ($request->has('telegram_chat_id')) {
-            $chatId = $request->telegram_chat_id;
-            $env->set('TELEGRAM_CHAT_ID', $chatId);
-            $user->update(['telegram_chat_id' => $chatId]);
-        }
-
-        Artisan::call('config:clear');
-
-        return redirect()->back()->with('success', 'Pengaturan Telegram disimpan ke .env. Notifikasi darurat akan dikirim ke Chat ID tersebut.');
-    }
 }

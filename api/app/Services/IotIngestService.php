@@ -154,6 +154,7 @@ class IotIngestService
      */
     public function resolveEventByCaregiver(Event $event, string $status, ?string $notes = null): Event
     {
+<<<<<<< HEAD
         $dbStatus = $status === 'resolved' ? 'resolved_by_caregiver' : 'false_alarm';
 
         $event->update([
@@ -161,6 +162,19 @@ class IotIngestService
             'notes' => $notes,
             'resolved_at' => now(),
         ]);
+=======
+        $botToken = env('TELEGRAM_BOT_TOKEN');
+        
+        // 🌟 AMBIL CHAT ID DARI DATABASE (Bukan dari .env lagi)
+        // Kita cari User siapa yang memiliki perangkat pembuat event ini
+        $device = $event->device()->with('user')->first();
+        $chatId = $device?->user?->telegram_chat_id;
+
+        // Batalkan jika Token Bot tidak ada ATAU jika User belum mengatur Telegram ID di Settings
+        if (! $botToken || ! $chatId) {
+            return;
+        }
+>>>>>>> 405eea6969c34fde2c11ae69b3587b60e0d42c35
 
         $device = $event->device;
         $device->update(['last_status' => 'normal']);
