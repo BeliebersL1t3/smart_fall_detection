@@ -8,17 +8,13 @@ use App\Models\Event;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Services\EmergencyNotifier;
-use Illuminate\Support\Facades\Mail;
-use App\Mail\EmergencyAlertMail;
-use Illuminate\Support\Facades\Http;
 use App\Services\IotIngestService;
 
 class DashboardController extends Controller
 {
     public function __construct(
         private IotIngestService $iotIngest,
-        private EmergencyNotifier $emergencyNotifier
-        private IotIngestService $iotIngest
+        private EmergencyNotifier $emergencyNotifier,
     ) {}
     public function index(Request $request)
     {
