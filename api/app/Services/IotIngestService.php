@@ -2,17 +2,15 @@
 
 namespace App\Services;
 
-use App\Mail\EmergencyAlertMail;
 use App\Models\Device;
 use App\Models\Event;
 use App\Support\BatteryHelper;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Mail;
 
 class IotIngestService
 {
     public function __construct(
-        private WebSocketNotifier $notifier
+        private WebSocketNotifier $notifier,
+        private EmergencyNotifier $emergencyNotifier
     ) {}
 
     public function ingestTelemetry(Device $device, array $data): array
@@ -134,14 +132,8 @@ class IotIngestService
             'occurred_at' => now(),
         ]);
 
-        if ($device->user?->email) {
-            Mail::to($device->user->email)->send(
-                new EmergencyAlertMail($event, $device->label)
-            );
-        }
+        $device->loadMissing('user');
 
-        $this->sendTelegramAlert($event);
-        
         $this->notifier->broadcast($device->user_id, 'sos_active', [
             'event_id' => $event->id,
             'device_id' => $device->id,
@@ -151,32 +143,60 @@ class IotIngestService
             'occurred_at' => $event->occurred_at->toIso8601String(),
         ]);
 
+        $this->emergencyNotifier->notify($event, $device);
+
         return $event;
     }
 
-    private function sendTelegramAlert(Event $event): void
+    /**
+     * Perawat (dashboard / Flutter) menyelesaikan alarm: false alarm atau resolved + catatan.
+     * Mematikan buzzer ESP32 lewat last_status = normal (dibaca saat polling sensor-data).
+     */
+    public function resolveEventByCaregiver(Event $event, string $status, ?string $notes = null): Event
     {
+        $dbStatus = $status === 'resolved' ? 'resolved_by_caregiver' : 'false_alarm';
+
+        // Telegram notification logic
         $botToken = env('TELEGRAM_BOT_TOKEN');
-        $chatId = env('TELEGRAM_CHAT_ID');
+        
+        // 🌟 AMBIL CHAT ID DARI DATABASE (Bukan dari .env lagi)
+        // Kita cari User siapa yang memiliki perangkat pembuat event ini
+        $device = $event->device()->with('user')->first();
+        $chatId = $device?->user?->telegram_chat_id;
 
-        if (! $botToken || ! $chatId) {
-            return;
+        // Batalkan jika Token Bot tidak ada ATAU jika User belum mengatur Telegram ID di Settings
+        if ($botToken && $chatId) {
+            // You may want to implement your notification logic here
+            // Example: Send Telegram notification about event resolution
+            // ...
         }
 
-        $jenis = $event->type === 'manual_sos' ? '🆘 MANUAL SOS' : '🚨 JATUH';
-        $gForce = $event->acceleration_peak ? $event->acceleration_peak.' G' : '-';
-        $waktu = now()->format('d M Y - H:i:s');
+        $event->update([
+            'status' => $dbStatus,
+            'notes' => $notes,
+            'resolved_at' => now(),
+        ]);
 
-        $message = "⚠️ *CAREGUARD EMERGENCY* ⚠️\n\n{$jenis}\n⏱ {$waktu}\n💥 {$gForce}";
+        $device = $event->device;
+        $device->update(['last_status' => 'normal']);
+        $device->refresh();
 
-        try {
-            Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
-                'chat_id' => $chatId,
-                'text' => $message,
-                'parse_mode' => 'Markdown',
-            ]);
-        } catch (\Throwable) {
-            // ignore
-        }
+        $this->notifier->broadcast($device->user_id, 'alarm_dismissed', [
+            'event_id' => $event->id,
+            'device_id' => $device->id,
+            'status' => $dbStatus,
+            'command_buzzer' => false,
+        ]);
+
+        $this->notifier->broadcast($device->user_id, 'telemetry', [
+            'device_id' => $device->id,
+            'status' => 'normal',
+            'command_buzzer' => false,
+            'is_online' => $device->is_online,
+            'battery' => $device->battery_level,
+            'battery_level' => $device->battery_level,
+        ]);
+
+        return $event->fresh();
     }
 }

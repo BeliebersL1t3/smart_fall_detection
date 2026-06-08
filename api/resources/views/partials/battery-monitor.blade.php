@@ -49,7 +49,7 @@ document.addEventListener('alpine:init', () => {
     $initialStatus = \App\Support\BatteryHelper::statusLabel($initialBattery);
 @endphp
 
-<div class="bg-white rounded-xl shadow-sm relative p-4 border border-gray-100"
+<div class="ui-card-stat"
      x-data
      x-init="$store.telemetry.init(@js($initialBattery), @js($initialColor), @js($initialStatus), false)">
     <div class="absolute -top-6 left-4 rounded-xl p-4 shadow-lg text-white transition-colors duration-500"
@@ -65,7 +65,7 @@ document.addEventListener('alpine:init', () => {
         </svg>
     </div>
     <div class="text-right pt-2">
-        <p class="text-sm text-gray-500 font-medium">Battery Level</p>
+        <p class="text-sm ui-subtitle font-medium">Battery Level</p>
         <h4 class="text-2xl font-bold transition-colors duration-300"
             :class="{
                 'text-green-600': $store.telemetry.batteryColor === 'green',
@@ -86,8 +86,8 @@ document.addEventListener('alpine:init', () => {
            x-text="$store.telemetry.batteryStatus">
         </p>
     </div>
-    <hr class="mt-4 border-gray-100">
-    <div class="mt-3 w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+    <hr class="mt-4 ui-divider">
+    <div class="mt-3 w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
         <div class="h-2 rounded-full transition-all duration-500 ease-out"
              :class="{
                 'bg-green-500': $store.telemetry.batteryColor === 'green',
