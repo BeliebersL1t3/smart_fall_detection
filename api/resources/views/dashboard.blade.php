@@ -246,13 +246,8 @@
                     @endphp
 
                     @forelse($displayedEvents as $event)
-<<<<<<< HEAD
                     <tr class="ui-table-row" x-data="{ isResolved: false }">
                             <td class="px-4 py-4">
-=======
-                    <tr class="ui-table-row">
-                        <td class="px-4 py-4">
->>>>>>> 405eea6969c34fde2c11ae69b3587b60e0d42c35
                             <div class="font-bold ui-title">{{ $event->occurred_at->format('M j, Y') }}</div>
                             <div class="text-xs ui-subtitle">{{ $event->occurred_at->format('H:i:s') }}</div>
                         </td>
@@ -284,12 +279,8 @@
                         </td>
                         <td class="px-4 py-4 text-right">
                             @if($event->status == 'confirmed')
-<<<<<<< HEAD
                             
                             <div x-data="{ open: false }" x-show="!isResolved">
-=======
-                            <div x-data="{ open: false }">
->>>>>>> 405eea6969c34fde2c11ae69b3587b60e0d42c35
                                 <button @click="open = true" class="text-emerald-500 hover:text-emerald-700 font-bold text-xs border border-emerald-500 dark:border-emerald-600 px-3 py-1.5 rounded-md hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition">
                                     Resolve
                                 </button>
