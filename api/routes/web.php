@@ -13,6 +13,8 @@ Route::get('/', function () {
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
+Route::post('/register', [AuthController::class, 'register']);
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -30,6 +32,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/settings/device', [App\Http\Controllers\SettingsController::class, 'updateDevice'])->name('settings.device');
     Route::post('/settings/api-base', [App\Http\Controllers\SettingsController::class, 'updateApiBase'])->name('settings.api_base');
     Route::post('/settings/password', [App\Http\Controllers\SettingsController::class, 'updatePassword'])->name('settings.password');
+    Route::post('/settings/telegram', [App\Http\Controllers\SettingsController::class, 'updateTelegram'])->name('settings.telegram');
 
     Route::get('/analytics', [App\Http\Controllers\AnalyticsController::class, 'index'])->name('analytics');
 

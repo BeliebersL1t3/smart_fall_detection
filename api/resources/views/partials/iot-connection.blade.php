@@ -1,4 +1,4 @@
-<div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6"
+<div class="ui-card p-6"
      x-data="iotConnection({
         userId: {{ auth()->id() }},
         deviceId: {{ $device->id }},
@@ -15,46 +15,46 @@
      })">
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
         <div>
-            <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full" :class="wsConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-300'"></span>
+            <h3 class="text-lg font-bold ui-title flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full" :class="wsConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-300 dark:bg-slate-600'"></span>
                 IoT Connection
             </h3>
-            <p class="text-xs text-gray-500 mt-1">Hubungkan ESP32 ke API Laravel. Real-time via WebSocket.</p>
+            <p class="text-xs ui-subtitle mt-1">Hubungkan ESP32 ke API Laravel. Real-time via WebSocket.</p>
         </div>
         <div class="flex items-center gap-2">
             <span class="text-xs font-bold px-3 py-1 rounded-full"
-                  :class="deviceOnline ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'"
+                  :class="deviceOnline ? 'bg-green-100 dark:bg-green-950/50 text-green-700 dark:text-green-400' : 'bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-400'"
                   x-text="deviceOnline ? 'Device Online' : 'Device Offline'"></span>
             <button type="button" @click="testApi()" :disabled="testing"
-                    class="bg-slate-800 hover:bg-slate-900 disabled:opacity-50 text-white text-xs font-bold py-2 px-4 rounded-lg transition"
+                    class="bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 disabled:opacity-50 text-white text-xs font-bold py-2 px-4 rounded-lg transition"
                     x-text="testing ? 'Testing...' : 'Test API'"></button>
         </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div class="lg:col-span-2 bg-gray-50 rounded-xl p-4 border border-gray-100 space-y-3 text-xs">
+        <div class="lg:col-span-2 bg-gray-50 dark:bg-slate-900/60 rounded-xl p-4 border border-gray-100 dark:border-slate-700 space-y-3 text-xs">
             <div>
-                <p class="font-bold text-gray-500 uppercase tracking-wider mb-1">API Base URL (untuk ESP32)</p>
+                <p class="font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">API Base URL (untuk ESP32)</p>
                 <div class="flex flex-col sm:flex-row gap-2">
                     <input type="text" x-model="apiBase"
                            placeholder="http://192.168.1.5:8000/api"
-                           class="flex-1 bg-white px-3 py-2 rounded-lg border border-indigo-200 text-indigo-800 text-sm font-mono focus:ring-2 focus:ring-indigo-500 outline-none">
+                           class="flex-1 bg-white dark:bg-slate-800 px-3 py-2 rounded-lg border border-indigo-200 dark:border-indigo-800 text-indigo-800 dark:text-indigo-300 text-sm font-mono focus:ring-2 focus:ring-indigo-500 outline-none">
                     <button type="button" @click="saveApiBase()" :disabled="savingApi"
                             class="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-bold px-4 py-2 rounded-lg whitespace-nowrap"
                             x-text="savingApi ? 'Menyimpan...' : 'Simpan'"></button>
                 </div>
-                <p class="text-[10px] text-gray-500 mt-1">Arduino <code class="bg-white px-1 rounded">API_BASE_URL</code>: <span class="font-mono text-indigo-600" x-text="arduinoRoot"></span></p>
+                <p class="text-[10px] ui-muted mt-1">Arduino <code class="bg-white dark:bg-slate-800 px-1 rounded">API_BASE_URL</code>: <span class="font-mono text-indigo-600 dark:text-indigo-400" x-text="arduinoRoot"></span></p>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                <div><p class="font-bold text-gray-400 mb-1">POST</p><code class="text-[10px] block">/sensor-data</code></div>
-                <div><p class="font-bold text-gray-400 mb-1">POST</p><code class="text-[10px] block">/fall-detected</code></div>
-                <div><p class="font-bold text-gray-400 mb-1">POST</p><code class="text-[10px] block">/sos</code></div>
+                <div><p class="font-bold text-gray-400 dark:text-slate-500 mb-1">POST</p><code class="text-[10px] block dark:text-slate-300">/sensor-data</code></div>
+                <div><p class="font-bold text-gray-400 dark:text-slate-500 mb-1">POST</p><code class="text-[10px] block dark:text-slate-300">/fall-detected</code></div>
+                <div><p class="font-bold text-gray-400 dark:text-slate-500 mb-1">POST</p><code class="text-[10px] block dark:text-slate-300">/sos</code></div>
             </div>
             <div>
-                <p class="font-bold text-gray-500 uppercase tracking-wider mb-1">Header ESP32</p>
-                <code class="block bg-white px-3 py-2 rounded-lg border text-gray-700 break-all">X-Device-Token: <span x-text="deviceToken"></span></code>
+                <p class="font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">Header ESP32</p>
+                <code class="block bg-white dark:bg-slate-800 px-3 py-2 rounded-lg border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-300 break-all">X-Device-Token: <span x-text="deviceToken"></span></code>
             </div>
-            <p x-show="apiMessage" class="text-emerald-600 font-semibold" x-text="apiMessage"></p>
+            <p x-show="apiMessage" class="text-emerald-600 dark:text-emerald-400 font-semibold" x-text="apiMessage"></p>
         </div>
         <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-4 text-white shadow-lg">
             <p class="text-xs font-bold opacity-80 uppercase">Live Telemetry</p>
