@@ -31,10 +31,13 @@
                     <p class="text-sm ui-subtitle">Location: {{ $deviceLocation }} | Time left: <span class="font-bold text-yellow-600" x-text="timeLeft + 's'"></span></p>
                 </div>
             </div>
-            <form action="{{ route('event.false_alarm', $latestEvent->id) }}" method="POST">
-                @csrf
-                <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-6 rounded-lg shadow transition">Mark as False Alarm</button>
-            </form>
+            
+            <button type="button" 
+    @click="show = false; fetch('{{ route('event.false_alarm', $latestEvent->id) }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' } });" 
+    class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-6 rounded-lg shadow transition">
+    Mark as False Alarm
+</button>
+
         </div>
     </div>
     @endif
@@ -243,8 +246,13 @@
                     @endphp
 
                     @forelse($displayedEvents as $event)
+<<<<<<< HEAD
+                    <tr class="ui-table-row" x-data="{ isResolved: false }">
+                            <td class="px-4 py-4">
+=======
                     <tr class="ui-table-row">
                         <td class="px-4 py-4">
+>>>>>>> 405eea6969c34fde2c11ae69b3587b60e0d42c35
                             <div class="font-bold ui-title">{{ $event->occurred_at->format('M j, Y') }}</div>
                             <div class="text-xs ui-subtitle">{{ $event->occurred_at->format('H:i:s') }}</div>
                         </td>
@@ -265,13 +273,23 @@
                                     default => 'text-gray-500'
                                 };
                             @endphp
-                            <span class="{{ $statusColor }} uppercase text-xs font-semibold tracking-wider">
+                            
+                            <span x-show="!isResolved" class="{{ $statusColor }} uppercase text-xs font-semibold tracking-wider">
                                 {{ str_replace('_', ' ', $event->status) }}
+                            </span>
+
+                            <span x-show="isResolved" style="display: none;" class="text-green-600 font-bold uppercase text-xs font-semibold tracking-wider">
+                                RESOLVED
                             </span>
                         </td>
                         <td class="px-4 py-4 text-right">
                             @if($event->status == 'confirmed')
+<<<<<<< HEAD
+                            
+                            <div x-data="{ open: false }" x-show="!isResolved">
+=======
                             <div x-data="{ open: false }">
+>>>>>>> 405eea6969c34fde2c11ae69b3587b60e0d42c35
                                 <button @click="open = true" class="text-emerald-500 hover:text-emerald-700 font-bold text-xs border border-emerald-500 dark:border-emerald-600 px-3 py-1.5 rounded-md hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition">
                                     Resolve
                                 </button>
@@ -283,8 +301,8 @@
                                             <h3 class="text-lg font-bold ui-title mb-2">Resolution Notes</h3>
                                             <p class="text-sm ui-subtitle mb-4 font-medium">Apa tindakan yang telah diambil untuk kejadian ini?</p>
                                             
-                                            <form action="{{ route('event.resolve', $event->id) }}" method="POST">
-                                                @csrf
+                                            <form @submit.prevent="open = false; isResolved = true; fetch('{{ route('event.resolve', $event->id) }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ notes: $event.target.notes.value }) });">
+                                            @csrf
                                                 <textarea 
                                                     name="notes" rows="4" required
                                                     placeholder="Contoh: Pasien terpeleset karpet..."
@@ -300,6 +318,9 @@
                                     </div>
                                 </div>
                             </div>
+                            
+                            <span x-show="isResolved" style="display: none;" class="text-gray-300 font-bold">-</span>
+                            
                             @else
                                 @if($event->notes)
                                     <div class="group relative inline-block">

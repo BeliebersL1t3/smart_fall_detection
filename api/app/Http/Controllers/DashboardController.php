@@ -7,6 +7,7 @@ use App\Models\Device;
 use App\Models\Event;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\EmergencyNotifier;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\EmergencyAlertMail;
 use Illuminate\Support\Facades\Http;
@@ -15,6 +16,8 @@ use App\Services\IotIngestService;
 class DashboardController extends Controller
 {
     public function __construct(
+        private IotIngestService $iotIngest,
+        private EmergencyNotifier $emergencyNotifier
         private IotIngestService $iotIngest
     ) {}
     public function index(Request $request)
@@ -110,14 +113,9 @@ class DashboardController extends Controller
             ]);
 
             $device = Device::with('user')->find($event->device_id);
-            $user = $device?->user;
             $location = $device?->displayLocation() ?? 'Perangkat ESP32';
 
-            if ($user?->email) {
-                Mail::to($user->email)->send(new EmergencyAlertMail($event, $location));
-            }
-            
-            $this->sendTelegramAlert($event);
+            $this->emergencyNotifier->notify($event, $device, $location);
         }
 
         return response()->json(['success' => true]);
@@ -163,11 +161,7 @@ class DashboardController extends Controller
             ]);
             $device->update(['last_status' => 'alarm']);
 
-            if (Auth::user()?->email) {
-                Mail::to(Auth::user()->email)->send(new EmergencyAlertMail($event, $location));
-            }
-            
-            $this->sendTelegramAlert($event);
+            $this->emergencyNotifier->notify($event, $device, $location);
         }
 
         return redirect()->back();
@@ -256,28 +250,5 @@ class DashboardController extends Controller
         $html .= '</table>';
 
         return response($html, 200, $headers);
-    }
-
-    private function sendTelegramAlert($event)
-    {
-        $botToken = env('TELEGRAM_BOT_TOKEN');
-        $chatId = env('TELEGRAM_CHAT_ID');
-        if (!$botToken || !$chatId) return;
-
-        $jenisDarurat = $event->type == 'manual_sos' ? '🆘 *MANUAL SOS DITEKAN*' : '🚨 *TERDETEKSI JATUH (CONFIRMED)*';
-        $gForce = $event->acceleration_peak ? $event->acceleration_peak . ' G' : 'Tidak Ada Data';
-        $waktu = now()->format('d M Y - H:i:s');
-
-        $message = "⚠️ *CAREGUARD EMERGENCY ALERT* ⚠️\n\n{$jenisDarurat}\n⏱ *Waktu:* {$waktu}\n💥 *Benturan:* {$gForce}";
-
-        try {
-            Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
-                'chat_id' => $chatId,
-                'text' => $message,
-                'parse_mode' => 'Markdown'
-            ]);
-        } catch (\Exception $e) {
-            \Log::error('Telegram Exception: ' . $e->getMessage());
-        }
     }
 }
