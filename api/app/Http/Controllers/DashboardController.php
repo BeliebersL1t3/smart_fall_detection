@@ -18,7 +18,6 @@ class DashboardController extends Controller
     public function __construct(
         private IotIngestService $iotIngest,
         private EmergencyNotifier $emergencyNotifier
-        private IotIngestService $iotIngest
     ) {}
     public function index(Request $request)
     {
