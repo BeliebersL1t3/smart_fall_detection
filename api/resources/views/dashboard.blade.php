@@ -33,10 +33,10 @@
             </div>
             
             <button type="button" 
-    @click="show = false; fetch('{{ route('event.false_alarm', $latestEvent->id) }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' } });" 
-    class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-6 rounded-lg shadow transition">
-    Mark as False Alarm
-</button>
+                @click="show = false; fetch('{{ route('event.false_alarm', $latestEvent->id) }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' } });" 
+                class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-6 rounded-lg shadow transition">
+                Mark as False Alarm
+            </button>
 
         </div>
     </div>
@@ -217,18 +217,20 @@
                 </form>
 
                 <div class="flex space-x-2">
-    <a href="{{ route('export.excel', ['filter' => $currentFilter, 'limit' => request('limit', 10)]) }}" class="bg-emerald-600 text-white text-sm font-bold py-2.5 px-4 rounded-lg shadow transition hover:bg-emerald-700 flex items-center">
-        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg> 
-        Excel
-    </a>
+                    <a href="{{ route('export.excel', ['filter' => $currentFilter, 'limit' => request('limit', 10)]) }}" class="bg-emerald-600 text-white text-sm font-bold py-2.5 px-4 rounded-lg shadow transition hover:bg-emerald-700 flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg> 
+                        Excel
+                    </a>
 
-    <a href="{{ route('export.pdf', ['filter' => $currentFilter, 'limit' => request('limit', 10)]) }}" class="bg-white dark:bg-slate-700 text-gray-800 dark:text-slate-100 hover:bg-gray-100 dark:hover:bg-slate-600 text-sm font-bold py-2.5 px-4 rounded-lg shadow transition flex items-center">
-        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> 
-        PDF
-    </a>
-</div>
+                    <a href="{{ route('export.pdf', ['filter' => $currentFilter, 'limit' => request('limit', 10)]) }}" class="bg-white dark:bg-slate-700 text-gray-800 dark:text-slate-100 hover:bg-gray-100 dark:hover:bg-slate-600 text-sm font-bold py-2.5 px-4 rounded-lg shadow transition flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> 
+                        PDF
+                    </a>
+                </div>
             </div>
-        </div> <div class="pt-20 overflow-x-auto">
+        </div> 
+        
+        <div class="pt-20 overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="ui-table-head">
@@ -246,8 +248,8 @@
                     @endphp
 
                     @forelse($displayedEvents as $event)
-                    <tr class="ui-table-row" x-data="{ isResolved: false }">
-                            <td class="px-4 py-4">
+                    <tr class="ui-table-row" x-data="{ isResolved: false, noteText: '' }">
+                        <td class="px-4 py-4">
                             <div class="font-bold ui-title">{{ $event->occurred_at->format('M j, Y') }}</div>
                             <div class="text-xs ui-subtitle">{{ $event->occurred_at->format('H:i:s') }}</div>
                         </td>
@@ -274,7 +276,7 @@
                             </span>
 
                             <span x-show="isResolved" style="display: none;" class="text-green-600 font-bold uppercase text-xs font-semibold tracking-wider">
-                                RESOLVED
+                                RESOLVED BY CAREGIVER
                             </span>
                         </td>
                         <td class="px-4 py-4 text-right">
@@ -292,7 +294,7 @@
                                             <h3 class="text-lg font-bold ui-title mb-2">Resolution Notes</h3>
                                             <p class="text-sm ui-subtitle mb-4 font-medium">Apa tindakan yang telah diambil untuk kejadian ini?</p>
                                             
-                                            <form @submit.prevent="open = false; isResolved = true; fetch('{{ route('event.resolve', $event->id) }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ notes: $event.target.notes.value }) });">
+                                            <form @submit.prevent="noteText = $event.target.notes.value; open = false; isResolved = true; fetch('{{ route('event.resolve', $event->id) }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ notes: $event.target.notes.value }) });">
                                             @csrf
                                                 <textarea 
                                                     name="notes" rows="4" required
@@ -310,7 +312,11 @@
                                 </div>
                             </div>
                             
-                            <span x-show="isResolved" style="display: none;" class="text-gray-300 font-bold">-</span>
+                            <div x-show="isResolved" style="display: none;" class="group relative inline-block">
+                                <svg class="w-5 h-5 text-gray-400 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                <div class="absolute bottom-full right-0 mb-2 hidden group-hover:block w-48 p-2 bg-gray-800 text-white text-[10px] rounded shadow-lg z-50 whitespace-normal text-left" x-text="noteText">
+                                </div>
+                            </div>
                             
                             @else
                                 @if($event->notes)
@@ -398,5 +404,4 @@
         });
     });
 </script>
-
 @endpush

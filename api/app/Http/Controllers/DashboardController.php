@@ -223,11 +223,11 @@ class DashboardController extends Controller
 
         $html = '<table border="1">';
         $html .= '<thead><tr>';
-        $html .= '<th>Date & Time<       width="150px"</th>';
-        $html .= '<th>Type<       width="100px"</th>';
-        $html .= '<th>Impact (G)<       width="100px"</th>';
-        $html .= '<th>Status<       width="100px"</th>';
-        $html .= '<th>Notes / Action Taken<       width="100px"</th>';
+        $html .= '<th>Date & Time< /th>';
+        $html .= '<th>Type< /th>';
+        $html .= '<th>Impact (G)< /th>';
+        $html .= '<th>Status< /th>';
+        $html .= '<th>Notes / Action Taken< /th>';
         $html .= '</tr></thead><style>';
         $html .= '.type-fall { background-color: #f8d7da; color: #721c24; }';
         $html .= '.type-sos { background-color: #d4edda; color: #155724; }';
