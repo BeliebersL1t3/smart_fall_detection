@@ -47,6 +47,13 @@
     @endphp
 
     @if($latestEvent && $latestEvent->status === 'confirmed' && !$isDismissed)
+    @php
+        $isSos = $latestEvent->type === 'manual_sos';
+        $bgClass = $isSos ? 'bg-blue-500 shadow-blue-500/40' : 'bg-red-500 shadow-red-500/40';
+        $textClass = $isSos ? 'text-blue-500' : 'text-red-500';
+        $textLightClass = $isSos ? 'text-blue-100' : 'text-red-100';
+        $hoverClass = $isSos ? 'hover:bg-blue-50' : 'hover:bg-red-50';
+    @endphp
     <div x-data="{ 
             showEmergency: true,
             alarmSound: new Audio('https://assets.mixkit.co/active_storage/sfx/995/995-preview.mp3'),
@@ -62,18 +69,18 @@
             }
         }" 
         x-show="showEmergency" 
-        class="bg-red-500 rounded-xl shadow-lg shadow-red-500/40 p-6 text-white relative">
+        class="{{ $bgClass }} rounded-xl shadow-lg p-6 text-white relative">
         <div class="flex items-center justify-between">
             <div class="flex items-center space-x-4">
-                <div class="bg-white text-red-500 p-3 rounded-full animate-pulse">
+                <div class="bg-white {{ $textClass }} p-3 rounded-full animate-pulse">
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                 </div>
                 <div>
                     <h2 class="text-2xl font-bold">EMERGENCY: Immediate Attention Required</h2>
-                    <p class="text-red-100">Location: {{ $deviceLocation }} @if($latestEvent->acceleration_peak) | Impact: <strong class="text-white">{{ number_format($latestEvent->acceleration_peak, 2) }} G</strong> @endif</p>
+                    <p class="{{ $textLightClass }}">Location: {{ $deviceLocation }} @if($latestEvent->acceleration_peak) | Impact: <strong class="text-white">{{ number_format($latestEvent->acceleration_peak, 2) }} G</strong> @endif</p>
                 </div>
             </div>
-            <button type="button" @click="stopAlarm(); showEmergency = false; fetch('{{ route('event.dismiss', $latestEvent->id) }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json', 'Accept': 'application/json' }});" class="bg-white text-red-500 hover:bg-red-50 font-bold py-2 px-6 rounded-lg shadow transition flex items-center">
+            <button type="button" @click="stopAlarm(); showEmergency = false; fetch('{{ route('event.dismiss', $latestEvent->id) }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json', 'Accept': 'application/json' }});" class="bg-white {{ $textClass }} {{ $hoverClass }} font-bold py-2 px-6 rounded-lg shadow transition flex items-center">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path></svg>
                 Dismiss Alert
             </button>
@@ -358,18 +365,7 @@
                                     </div>
                                 </div>
 
-                                {{-- CONFIRMED → Dismiss alarm --}}
-                                @php $isDismissedRow = in_array($event->id, session('dismissed_alerts', [])); @endphp
-                                @if(!$isDismissedRow)
-                                <button type="button"
-                                        @click="fetch('{{ route('event.dismiss', $event->id) }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' } })"
-                                        title="Matikan alarm suara"
-                                        class="text-gray-400 hover:text-red-500 dark:hover:text-red-400 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 border border-gray-200 dark:border-slate-700 hover:border-red-300 transition">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/>
-                                    </svg>
-                                </button>
-                                @endif
+
                                 @endif
 
                             </div>

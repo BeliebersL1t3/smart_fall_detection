@@ -181,6 +181,10 @@ document.addEventListener('alpine:init', () => {
 
         handleWsMessage(msg) {
             if (msg.type === 'fall_detected') {
+                if (this.onDashboard) {
+                    window.location.reload();
+                    return;
+                }
                 const impact = msg.payload?.magnitude
                     ? parseFloat(msg.payload.magnitude).toFixed(2) + ' G'
                     : '—';
@@ -193,6 +197,10 @@ document.addEventListener('alpine:init', () => {
             }
 
             if (msg.type === 'sos_active') {
+                if (this.onDashboard) {
+                    window.location.reload();
+                    return;
+                }
                 this.showAlarmToast('🔴 SOS AKTIF!', 'Tombol darurat ditekan. Segera tangani!');
                 this.setGlobalAlarm(true, '🔴 SOS Aktif — segera tangani!');
                 this.blinkSidebarDot(true);
@@ -232,6 +240,10 @@ document.addEventListener('alpine:init', () => {
 
                 // ─ alarm state flip (normal → alarm)
                 if (data.last_status === 'alarm' && this.prevAlarmState !== 'alarm') {
+                    if (this.prevAlarmState !== null && this.onDashboard) {
+                        window.location.reload();
+                        return;
+                    }
                     if (data.active_event) {
                         const ev = data.active_event;
                         const impact = ev.impact ? parseFloat(ev.impact).toFixed(2) + ' G' : '—';
@@ -266,7 +278,6 @@ document.addEventListener('alpine:init', () => {
 
         // ── helpers ───────────────────────────────────────────────────
         setGlobalAlarm(on, msg) {
-            // Skip banner on dashboard — it handles alarms natively
             if (this.onDashboard) return;
             this.globalAlarm = on;
             if (msg) this.globalAlarmMsg = msg;
@@ -281,9 +292,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         showAlarmToast(title, body) {
-            // Skip toast popup on dashboard — it handles alarms natively
             if (this.onDashboard) return;
-
             clearTimeout(this.alarmToast.timer);
             clearInterval(this.alarmToast._progTimer);
 
@@ -312,7 +321,6 @@ document.addEventListener('alpine:init', () => {
         },
 
         showInfoToast(type, message) {
-            // Skip toast popup on dashboard
             if (this.onDashboard) return;
             clearTimeout(this.infoToast.timer);
             this.infoToast.type    = type;
