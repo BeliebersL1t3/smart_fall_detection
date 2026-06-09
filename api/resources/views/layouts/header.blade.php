@@ -4,6 +4,44 @@
     </div>
 
     <div class="flex items-center space-x-4">
+        {{-- Live Device Status Pill --}}
+        @auth
+        <div x-data x-show="$store.live" class="hidden md:flex items-center gap-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl px-3 py-1.5 shadow-sm">
+            {{-- Status dot --}}
+            <span class="relative flex-shrink-0">
+                <span class="w-2 h-2 rounded-full inline-block"
+                      :class="$store.live.isOnline
+                          ? ($store.live.lastStatus === 'alarm' ? 'bg-red-500' : 'bg-emerald-500')
+                          : 'bg-gray-300 dark:bg-slate-600'"></span>
+                <span class="absolute inset-0 rounded-full animate-ping"
+                      :class="$store.live.isOnline && $store.live.lastStatus === 'alarm'
+                          ? 'bg-red-400 opacity-75' : 'hidden'"></span>
+            </span>
+
+            {{-- Label --}}
+            <span class="text-xs font-bold"
+                  :class="$store.live.lastStatus === 'alarm'
+                      ? 'text-red-600 dark:text-red-400'
+                      : ($store.live.isOnline ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400 dark:text-slate-500')"
+                  x-text="$store.live.lastStatus === 'alarm'
+                      ? '🚨 ALARM'
+                      : ($store.live.isOnline ? 'Online' : 'Offline')">
+            </span>
+
+            {{-- Magnitude --}}
+            <span class="text-xs text-gray-500 dark:text-slate-400 font-mono border-l border-gray-200 dark:border-slate-600 pl-2 ml-1"
+                  x-show="$store.live.magnitude !== null"
+                  x-text="$store.live.magnitude !== null ? parseFloat($store.live.magnitude).toFixed(2) + ' G' : ''">
+            </span>
+
+            {{-- Battery --}}
+            <span class="text-xs font-semibold border-l border-gray-200 dark:border-slate-600 pl-2 ml-1"
+                  :class="($store.live.battery ?? 100) > 20 ? 'text-gray-500 dark:text-slate-400' : 'text-red-500'"
+                  x-show="$store.live.battery !== null"
+                  x-text="$store.live.battery !== null ? '🔋 ' + $store.live.battery + '%' : ''">
+            </span>
+        </div>
+        @endauth
         <button
             type="button"
             @click="$store.theme.toggle()"

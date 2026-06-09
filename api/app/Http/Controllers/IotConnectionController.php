@@ -38,6 +38,50 @@ class IotConnectionController extends Controller
         ]);
     }
 
+    /**
+     * Lightweight endpoint polled every ~2 s by the global live-monitor.
+     * Returns only what is needed to drive global alerts & sidebar badges.
+     */
+    public function liveStatus()
+    {
+        $device = Device::where('user_id', Auth::id())->first();
+
+        if (! $device) {
+            return response()->json(['ok' => false], 404);
+        }
+
+        $isOnline = $device->last_seen_at && $device->last_seen_at->gt(now()->subSeconds(30));
+
+        // Find the most recent unresolved event (pending or confirmed)
+        $activeEvent = Event::where('device_id', $device->id)
+            ->whereIn('status', ['pending', 'confirmed'])
+            ->latest('occurred_at')
+            ->first();
+
+        $pendingCount = Event::where('device_id', $device->id)
+            ->where('status', 'pending')
+            ->count();
+
+        $totalCount = Event::where('device_id', $device->id)->count();
+
+        return response()->json([
+            'ok'             => true,
+            'is_online'      => $isOnline,
+            'last_status'    => $device->last_status,       // 'alarm' | 'normal'
+            'last_magnitude' => $device->last_magnitude,
+            'battery'        => $device->battery_level,
+            'active_event'   => $activeEvent ? [
+                'id'     => $activeEvent->id,
+                'type'   => $activeEvent->type,
+                'status' => $activeEvent->status,
+                'impact' => $activeEvent->acceleration_peak,
+                'time'   => $activeEvent->occurred_at->toIso8601String(),
+            ] : null,
+            'pending_count'  => $pendingCount,
+            'total_count'    => $totalCount,
+        ]);
+    }
+
     public function updateApiBase(Request $request)
     {
         $request->validate([

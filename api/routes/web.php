@@ -37,6 +37,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/analytics', [App\Http\Controllers\AnalyticsController::class, 'index'])->name('analytics');
 
     Route::get('/dashboard/iot/status', [IotConnectionController::class, 'status'])->name('iot.status');
+    Route::get('/dashboard/iot/live', [IotConnectionController::class, 'liveStatus'])->name('iot.live');
     Route::post('/dashboard/iot/test', [IotConnectionController::class, 'testConnection'])->name('iot.test');
     Route::post('/dashboard/iot/api-base', [IotConnectionController::class, 'updateApiBase'])->name('iot.api_base');
     Route::post('/sensor/data', [ApiController::class, 'receiveData']);

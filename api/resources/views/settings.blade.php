@@ -20,11 +20,7 @@
             </div>
             <div>
                 <h3 class="text-lg font-bold ui-title">User Profile</h3>
-<<<<<<< HEAD
                 <p class="text-xs ui-subtitle font-medium">Login dashboard &amp; <strong>alamat penerima</strong> email alert darurat.</p>
-=======
-                <p class="text-xs ui-subtitle font-medium">Manage your personal information and login details.</p>
->>>>>>> 405eea6969c34fde2c11ae69b3587b60e0d42c35
             </div>
         </div>
         <div class="p-6">
@@ -35,7 +31,6 @@
                     <input type="text" name="name" value="{{ auth()->user()->name }}" required class="ui-input focus:ring-blue-500">
                 </div>
                 <div>
-<<<<<<< HEAD
                     <label class="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Email Penerima Alert (Login ID)</label>
                     <input type="email" name="email" value="{{ auth()->user()->email }}" required class="ui-input focus:ring-blue-500">
                     <p class="text-xs text-blue-600 dark:text-blue-400 mt-2 font-medium">
@@ -43,11 +38,6 @@
                         <code class="bg-gray-100 dark:bg-slate-800 px-1 rounded">{{ $mail['from_address'] ?: '—' }}</code>.
                     </p>
                     <p class="text-xs text-orange-500 mt-1 font-medium flex items-center">
-=======
-                    <label class="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Email Address (Login ID)</label>
-                    <input type="email" name="email" value="{{ auth()->user()->email }}" required class="ui-input focus:ring-blue-500">
-                    <p class="text-xs text-orange-500 mt-2 font-medium flex items-center">
->>>>>>> 405eea6969c34fde2c11ae69b3587b60e0d42c35
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                         Warning: Changing this will change your login email.
                     </p>
@@ -57,7 +47,6 @@
         </div>
     </div>
 
-<<<<<<< HEAD
     <div class="ui-card rounded-2xl overflow-hidden">
         <div class="ui-section-header flex items-center space-x-3">
             <div class="bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 p-2 rounded-lg">
@@ -121,47 +110,6 @@
                 <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-xl shadow-md shadow-blue-500/30 transition-all">Simpan Pengaturan Telegram</button>
             </form>
         </div>
-=======
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 mb-8 transition-colors duration-300">
-        <div class="flex items-center space-x-3 mb-4">
-            <div class="bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 p-3 rounded-xl">
-                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z"/></svg>
-            </div>
-            <div>
-                <h3 class="text-lg font-bold text-gray-800 dark:text-white">Notifikasi Telegram</h3>
-                <p class="text-sm text-gray-500 dark:text-gray-400">Atur akun Telegram yang akan menerima pesan darurat saat pasien terjatuh.</p>
-            </div>
-        </div>
-
-        <form action="{{ route('settings.telegram') }}" method="POST">
-            @csrf
-            <div class="space-y-4">
-                <div>
-                    <label for="telegram_chat_id" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Telegram Chat ID</label>
-                    <div class="flex space-x-3">
-                        <input type="text" name="telegram_chat_id" id="telegram_chat_id"
-                               value="{{ auth()->user()->telegram_chat_id }}"
-                               placeholder="Contoh: 123456789"
-                               class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-colors">
-
-                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg shadow-lg shadow-blue-500/30 transition-all whitespace-nowrap">
-                            Simpan ID
-                        </button>
-                    </div>
-                </div>
-
-                <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-100 dark:border-blue-800/50">
-                    <h4 class="text-sm font-bold text-blue-800 dark:text-blue-300 mb-1">Cara mendapatkan Chat ID:</h4>
-                    <ol class="text-xs text-blue-700 dark:text-blue-400 list-decimal ml-4 space-y-1">
-                        <li>Buka aplikasi Telegram di HP Anda.</li>
-                        <li>Cari bot bernama <strong class="font-bold">@userinfobot</strong>.</li>
-                        <li>Kirim pesan <code class="bg-white dark:bg-gray-800 px-1 py-0.5 rounded text-gray-800 dark:text-gray-200 font-mono">/start</code> ke bot tersebut.</li>
-                        <li>Bot akan membalas dengan angka ID Anda (contoh: <code class="font-mono">Id: 123456789</code>). Salin angka tersebut ke kolom di atas.</li>
-                    </ol>
-                </div>
-            </div>
-        </form>
->>>>>>> 405eea6969c34fde2c11ae69b3587b60e0d42c35
     </div>
 
     @if($device)
@@ -225,6 +173,45 @@
         </div>
     </div>
 
+
+    {{-- ==================== DEVELOPER SANDBOX ==================== --}}
+    <div class="ui-card rounded-2xl overflow-hidden">
+        <div class="ui-section-header flex items-center space-x-3">
+            <div class="bg-indigo-100 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 p-2 rounded-lg">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+            </div>
+            <div>
+                <h3 class="text-lg font-bold ui-title">Developer Sandbox</h3>
+                <p class="text-xs ui-subtitle font-medium">Simulasi data masuk dari ESP32 untuk keperluan testing.</p>
+            </div>
+        </div>
+        <div class="p-6">
+            <div class="bg-indigo-50 dark:bg-indigo-950/40 border border-dashed border-indigo-200 dark:border-indigo-800 rounded-xl p-5">
+                <p class="text-xs text-indigo-600 dark:text-indigo-400 mb-4 font-medium">
+                    Tekan tombol di bawah untuk mengirim simulasi event ke sistem, seolah-olah data datang langsung dari perangkat ESP32.
+                </p>
+                <div class="flex flex-wrap gap-3">
+                    <form action="{{ route('simulate', 'fall') }}" method="POST">
+                        @csrf
+                        <button type="submit"
+                                class="bg-red-500 hover:bg-red-600 text-white text-sm font-bold py-2.5 px-5 rounded-lg shadow-md shadow-red-500/30 transition flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            Simulate Fall
+                        </button>
+                    </form>
+                    <form action="{{ route('simulate', 'sos') }}" method="POST">
+                        @csrf
+                        <button type="submit"
+                                class="bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold py-2.5 px-5 rounded-lg shadow-md shadow-blue-500/30 transition flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                            Simulate Manual SOS
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="ui-card rounded-2xl overflow-hidden">
         <div class="ui-section-header flex items-center space-x-3">
             <div class="bg-red-100 dark:bg-red-950/50 text-red-500 dark:text-red-400 p-2 rounded-lg">
@@ -256,3 +243,133 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('alpine:init', () => {
+    // Shared telemetry store (same as in dashboard/iot-connection partial)
+    if (!Alpine.store('telemetry')) {
+        Alpine.store('telemetry', {
+            battery: null,
+            batteryColor: null,
+            batteryStatus: null,
+            status: null,
+            applyPayload(payload) {
+                if (payload.battery != null)        this.battery       = payload.battery;
+                if (payload.battery_level != null)  this.battery       = payload.battery_level;
+                if (payload.battery_color != null)  this.batteryColor  = payload.battery_color;
+                if (payload.battery_status != null) this.batteryStatus = payload.battery_status;
+                if (payload.status != null)         this.status        = payload.status;
+            }
+        });
+    }
+
+    Alpine.data('iotConnection', (config) => ({
+        userId: config.userId,
+        deviceId: config.deviceId,
+        wsUrl: config.wsUrl,
+        apiBase: config.apiBase,
+        arduinoRoot: config.arduinoRoot,
+        deviceToken: config.deviceToken,
+        testUrl: config.testUrl,
+        statusUrl: config.statusUrl,
+        saveApiUrl: config.saveApiUrl,
+        csrf: config.csrf,
+        wsConnected: false,
+        deviceOnline: false,
+        testing: false,
+        savingApi: false,
+        apiMessage: '',
+        lastWsEvent: '',
+        liveMagnitude: config.initialMagnitude,
+        liveBattery: config.initialBattery,
+        ws: null,
+        lastEventCount: null,
+        init() {
+            this.connectWebSocket();
+            setInterval(() => this.pollStatus(), 5000);
+            this.pollStatus();
+        },
+        connectWebSocket() {
+            try {
+                this.ws = new WebSocket(this.wsUrl);
+                this.ws.onopen = () => { this.wsConnected = true; };
+                this.ws.onclose = () => {
+                    this.wsConnected = false;
+                    setTimeout(() => this.connectWebSocket(), 5000);
+                };
+                this.ws.onmessage = (event) => {
+                    const msg = JSON.parse(event.data);
+                    this.lastWsEvent = msg.type;
+                    if (msg.type === 'telemetry' && msg.payload) {
+                        if (msg.payload.magnitude != null) this.liveMagnitude = parseFloat(msg.payload.magnitude);
+                        Alpine.store('telemetry').applyPayload(msg.payload);
+                        this.deviceOnline = true;
+                    }
+                };
+            } catch (e) {
+                this.wsConnected = false;
+            }
+        },
+        pollStatus() {
+            fetch(this.statusUrl, { headers: { Accept: 'application/json' } })
+                .then(r => r.json())
+                .then(data => {
+                    this.deviceOnline = !!data.connected;
+                    if (data.last_magnitude != null) this.liveMagnitude = parseFloat(data.last_magnitude);
+                    Alpine.store('telemetry').applyPayload(data);
+                    this.lastEventCount = data.event_count;
+                })
+                .catch(() => {});
+        },
+        async saveApiBase() {
+            this.savingApi = true;
+            this.apiMessage = '';
+            try {
+                const res = await fetch(this.saveApiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': this.csrf,
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ api_base_url: this.apiBase }),
+                });
+                const data = await res.json();
+                if (data.success) {
+                    this.apiBase = data.api_base;
+                    this.arduinoRoot = data.arduino_root;
+                    this.apiMessage = data.message || 'URL disimpan.';
+                } else {
+                    this.apiMessage = data.message || 'Gagal menyimpan URL.';
+                }
+            } catch (e) {
+                this.apiMessage = 'Gagal menyimpan URL.';
+            } finally {
+                this.savingApi = false;
+            }
+        },
+        async testApi() {
+            this.testing = true;
+            this.apiMessage = '';
+            try {
+                const res = await fetch(this.testUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': this.csrf,
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                });
+                const data = await res.json();
+                this.apiMessage = data.message || 'API siap.';
+            } catch (e) {
+                this.apiMessage = 'Gagal menghubungi API.';
+            } finally {
+                this.testing = false;
+            }
+        },
+    }));
+});
+</script>
+@endpush
