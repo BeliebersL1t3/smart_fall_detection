@@ -173,6 +173,45 @@
         </div>
     </div>
 
+
+    {{-- ==================== DEVELOPER SANDBOX ==================== --}}
+    <div class="ui-card rounded-2xl overflow-hidden">
+        <div class="ui-section-header flex items-center space-x-3">
+            <div class="bg-indigo-100 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 p-2 rounded-lg">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+            </div>
+            <div>
+                <h3 class="text-lg font-bold ui-title">Developer Sandbox</h3>
+                <p class="text-xs ui-subtitle font-medium">Simulasi data masuk dari ESP32 untuk keperluan testing.</p>
+            </div>
+        </div>
+        <div class="p-6">
+            <div class="bg-indigo-50 dark:bg-indigo-950/40 border border-dashed border-indigo-200 dark:border-indigo-800 rounded-xl p-5">
+                <p class="text-xs text-indigo-600 dark:text-indigo-400 mb-4 font-medium">
+                    Tekan tombol di bawah untuk mengirim simulasi event ke sistem, seolah-olah data datang langsung dari perangkat ESP32.
+                </p>
+                <div class="flex flex-wrap gap-3">
+                    <form action="{{ route('simulate', 'fall') }}" method="POST">
+                        @csrf
+                        <button type="submit"
+                                class="bg-red-500 hover:bg-red-600 text-white text-sm font-bold py-2.5 px-5 rounded-lg shadow-md shadow-red-500/30 transition flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            Simulate Fall
+                        </button>
+                    </form>
+                    <form action="{{ route('simulate', 'sos') }}" method="POST">
+                        @csrf
+                        <button type="submit"
+                                class="bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold py-2.5 px-5 rounded-lg shadow-md shadow-blue-500/30 transition flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                            Simulate Manual SOS
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="ui-card rounded-2xl overflow-hidden">
         <div class="ui-section-header flex items-center space-x-3">
             <div class="bg-red-100 dark:bg-red-950/50 text-red-500 dark:text-red-400 p-2 rounded-lg">
@@ -204,3 +243,133 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('alpine:init', () => {
+    // Shared telemetry store (same as in dashboard/iot-connection partial)
+    if (!Alpine.store('telemetry')) {
+        Alpine.store('telemetry', {
+            battery: null,
+            batteryColor: null,
+            batteryStatus: null,
+            status: null,
+            applyPayload(payload) {
+                if (payload.battery != null)        this.battery       = payload.battery;
+                if (payload.battery_level != null)  this.battery       = payload.battery_level;
+                if (payload.battery_color != null)  this.batteryColor  = payload.battery_color;
+                if (payload.battery_status != null) this.batteryStatus = payload.battery_status;
+                if (payload.status != null)         this.status        = payload.status;
+            }
+        });
+    }
+
+    Alpine.data('iotConnection', (config) => ({
+        userId: config.userId,
+        deviceId: config.deviceId,
+        wsUrl: config.wsUrl,
+        apiBase: config.apiBase,
+        arduinoRoot: config.arduinoRoot,
+        deviceToken: config.deviceToken,
+        testUrl: config.testUrl,
+        statusUrl: config.statusUrl,
+        saveApiUrl: config.saveApiUrl,
+        csrf: config.csrf,
+        wsConnected: false,
+        deviceOnline: false,
+        testing: false,
+        savingApi: false,
+        apiMessage: '',
+        lastWsEvent: '',
+        liveMagnitude: config.initialMagnitude,
+        liveBattery: config.initialBattery,
+        ws: null,
+        lastEventCount: null,
+        init() {
+            this.connectWebSocket();
+            setInterval(() => this.pollStatus(), 5000);
+            this.pollStatus();
+        },
+        connectWebSocket() {
+            try {
+                this.ws = new WebSocket(this.wsUrl);
+                this.ws.onopen = () => { this.wsConnected = true; };
+                this.ws.onclose = () => {
+                    this.wsConnected = false;
+                    setTimeout(() => this.connectWebSocket(), 5000);
+                };
+                this.ws.onmessage = (event) => {
+                    const msg = JSON.parse(event.data);
+                    this.lastWsEvent = msg.type;
+                    if (msg.type === 'telemetry' && msg.payload) {
+                        if (msg.payload.magnitude != null) this.liveMagnitude = parseFloat(msg.payload.magnitude);
+                        Alpine.store('telemetry').applyPayload(msg.payload);
+                        this.deviceOnline = true;
+                    }
+                };
+            } catch (e) {
+                this.wsConnected = false;
+            }
+        },
+        pollStatus() {
+            fetch(this.statusUrl, { headers: { Accept: 'application/json' } })
+                .then(r => r.json())
+                .then(data => {
+                    this.deviceOnline = !!data.connected;
+                    if (data.last_magnitude != null) this.liveMagnitude = parseFloat(data.last_magnitude);
+                    Alpine.store('telemetry').applyPayload(data);
+                    this.lastEventCount = data.event_count;
+                })
+                .catch(() => {});
+        },
+        async saveApiBase() {
+            this.savingApi = true;
+            this.apiMessage = '';
+            try {
+                const res = await fetch(this.saveApiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': this.csrf,
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ api_base_url: this.apiBase }),
+                });
+                const data = await res.json();
+                if (data.success) {
+                    this.apiBase = data.api_base;
+                    this.arduinoRoot = data.arduino_root;
+                    this.apiMessage = data.message || 'URL disimpan.';
+                } else {
+                    this.apiMessage = data.message || 'Gagal menyimpan URL.';
+                }
+            } catch (e) {
+                this.apiMessage = 'Gagal menyimpan URL.';
+            } finally {
+                this.savingApi = false;
+            }
+        },
+        async testApi() {
+            this.testing = true;
+            this.apiMessage = '';
+            try {
+                const res = await fetch(this.testUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': this.csrf,
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                });
+                const data = await res.json();
+                this.apiMessage = data.message || 'API siap.';
+            } catch (e) {
+                this.apiMessage = 'Gagal menghubungi API.';
+            } finally {
+                this.testing = false;
+            }
+        },
+    }));
+});
+</script>
+@endpush

@@ -16,13 +16,29 @@ class IotIngestService
 
     public function ingestTelemetry(Device $device, array $data): array
     {
+        // Capture the current server-side status BEFORE any update.
+        // This is the source-of-truth: if the dashboard dismissed the alarm
+        // (set last_status = 'normal'), we must NOT let the ESP32's periodic
+        // heartbeat (which still has fallAlarm=true locally) override it back.
+        $currentDbStatus = $device->last_status;
+
+        // Only accept an 'alarm' escalation from the ESP32 heartbeat if the
+        // server isn't already in a 'normal' (dismissed) state.
+        // The dedicated /api/fall-detected endpoint is the correct way to
+        // escalate to alarm; this telemetry endpoint must not undo a dismiss.
+        $incomingStatus = $data['status'] ?? 'normal';
+        if ($incomingStatus === 'alarm' && $currentDbStatus === 'normal') {
+            // Dashboard already dismissed — keep 'normal', don't re-escalate.
+            $incomingStatus = 'normal';
+        }
+
         $updates = [
             'is_online' => true,
             'last_magnitude' => $data['magnitude'] ?? null,
             'last_ax' => $data['ax'] ?? null,
             'last_ay' => $data['ay'] ?? null,
             'last_az' => $data['az'] ?? null,
-            'last_status' => $data['status'] ?? 'normal',
+            'last_status' => $incomingStatus,
             'last_seen_at' => now(),
         ];
 

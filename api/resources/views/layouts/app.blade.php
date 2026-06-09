@@ -35,6 +35,7 @@
         </main>
         @include('layouts.footer')
     </div>
+    @include('layouts.live-monitor')
     @stack('scripts')
 </body>
 </html>

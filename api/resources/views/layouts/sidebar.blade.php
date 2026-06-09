@@ -7,9 +7,16 @@
     </div>
 
     <div class="flex-1 overflow-y-auto py-6 px-4 space-y-2">
-        <a href="{{ route('dashboard') }}" class="flex items-center space-x-3 {{ request()->routeIs('dashboard') ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/40' : 'ui-nav-inactive' }} px-4 py-3 rounded-xl transition-all">
+        <a href="{{ route('dashboard') }}" class="flex items-center space-x-3 {{ request()->routeIs('dashboard') ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/40' : 'ui-nav-inactive' }} px-4 py-3 rounded-xl transition-all relative">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-            <span class="font-medium">Dashboard</span>
+            <span class="font-medium flex-1">Dashboard</span>
+            {{-- Live alarm badge --}}
+            <span x-data
+                  x-show="$store.live && $store.live.pendingCount > 0"
+                  x-text="$store.live ? $store.live.pendingCount : ''"
+                  class="ml-auto bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none animate-pulse"
+                  style="display:none;">
+            </span>
         </a>
 
         <a href="{{ route('analytics') }}" class="flex items-center space-x-3 {{ request()->routeIs('analytics') ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/40' : 'ui-nav-inactive' }} px-4 py-3 rounded-xl transition-all">
