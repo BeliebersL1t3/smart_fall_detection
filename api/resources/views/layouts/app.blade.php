@@ -26,9 +26,11 @@
         html.dark ::-webkit-scrollbar-thumb { background: #475569; }
     </style>
 </head>
-<body class="bg-[#f8fafc] dark:bg-slate-950 text-slate-800 dark:text-slate-200 antialiased overflow-hidden flex h-screen" x-data x-init="$store.theme.init()">
+<body class="bg-[#f8fafc] dark:bg-slate-950 text-slate-800 dark:text-slate-200 antialiased overflow-hidden flex h-screen relative" x-data x-init="$store.theme.init()">
+    <div class="fixed inset-0 pointer-events-none z-0 opacity-3 dark:hidden" style="background-image: url('{{ asset('image/honeycomb.png') }}'); background-repeat: repeat; background-size: 250px;"></div>
+    <div class="fixed inset-0 pointer-events-none z-0 hidden dark:block opacity-15" style="background-image: url('{{ asset('image/honeycomb white.png') }}'); background-repeat: repeat; background-size: 250px;"></div>
     @include('layouts.sidebar')
-    <div class="flex-1 ml-64 flex flex-col h-screen overflow-y-auto overflow-x-hidden relative">
+    <div class="flex-1 ml-64 flex flex-col h-screen overflow-y-auto overflow-x-hidden relative z-10">
         @include('layouts.header')
         <main class="flex-1 px-8 pb-8">
             @yield('content')

@@ -1,12 +1,14 @@
-<div class="w-64 bg-white dark:bg-slate-900 shadow-xl dark:shadow-black/30 h-screen fixed top-0 left-0 z-40 flex flex-col transition-all duration-300 border-r border-transparent dark:border-slate-800">
-    <div class="h-20 flex items-center justify-center border-b border-gray-100 dark:border-slate-800 px-6">
+<div class="w-64 bg-white dark:bg-slate-900 shadow-xl dark:shadow-black/30 h-screen fixed top-0 left-0 z-40 flex flex-col transition-all duration-300 border-r border-transparent dark:border-slate-800 overflow-hidden">
+    <div class="absolute inset-0 pointer-events-none z-0 opacity-2 dark:hidden" style="background-image: url('{{ asset('image/Dashboard.png') }}'); background-size: cover; background-position: center;"></div>
+    <div class="absolute inset-0 pointer-events-none z-0 hidden dark:block opacity-5" style="background-image: url('{{ asset('image/Dashboard whtie.png') }}'); background-size: cover; background-position: center;"></div>
+    <div class="h-20 flex items-center justify-center border-b border-gray-100 dark:border-slate-800 px-6 relative z-10">
         <div class="flex items-center space-x-2">
             <svg class="w-8 h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
             <span class="text-lg font-bold text-gray-800 dark:text-slate-100 tracking-wide">CareGuard</span>
         </div>
     </div>
 
-    <div class="flex-1 overflow-y-auto py-6 px-4 space-y-2">
+    <div class="flex-1 overflow-y-auto py-6 px-4 space-y-2 relative z-10">
         <a href="{{ route('dashboard') }}" class="flex items-center space-x-3 {{ request()->routeIs('dashboard') ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/40' : 'ui-nav-inactive' }} px-4 py-3 rounded-xl transition-all relative">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
             <span class="font-medium flex-1">Dashboard</span>
