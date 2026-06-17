@@ -80,7 +80,7 @@
                     <p class="{{ $textLightClass }}">Location: {{ $deviceLocation }} @if($latestEvent->acceleration_peak) | Impact: <strong class="text-white">{{ number_format($latestEvent->acceleration_peak, 2) }} G</strong> @endif</p>
                 </div>
             </div>
-            <button type="button" @click="stopAlarm(); showEmergency = false; fetch('{{ route('event.dismiss', $latestEvent->id) }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json', 'Accept': 'application/json' }});" class="bg-white {{ $textClass }} {{ $hoverClass }} font-bold py-2 px-6 rounded-lg shadow transition flex items-center">
+            <button type="button" @click="stopAlarm(); showEmergency = false; fetch('{{ route('event.dismiss', $latestEvent->id) }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json', 'Accept': 'application/json' }}).then(() => window.location.reload());" class="bg-white {{ $textClass }} {{ $hoverClass }} font-bold py-2 px-6 rounded-lg shadow transition flex items-center">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path></svg>
                 Dismiss Alert
             </button>
@@ -315,7 +315,7 @@
                                 {{-- PENDING → False Alarm --}}
                                 @if($event->status === 'pending')
                                 <button type="button"
-                                        @click="isFalseAlarm = true; fetch('{{ route('event.false_alarm', $event->id) }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' } })"
+                                        @click="isFalseAlarm = true; fetch('{{ route('event.false_alarm', $event->id) }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' } }).then(() => window.location.reload());"
                                         class="text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 font-bold text-[11px] border border-yellow-400 dark:border-yellow-600 px-2.5 py-1.5 rounded-lg hover:bg-yellow-50 dark:hover:bg-yellow-950/30 transition whitespace-nowrap">
                                     False Alarm
                                 </button>
@@ -351,7 +351,7 @@
                                                     method: 'POST',
                                                     headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json', 'Accept': 'application/json' },
                                                     body: JSON.stringify({ notes: $event.target.notes.value })
-                                                });">
+                                                }).then(() => window.location.reload());">
                                                 @csrf
                                                 <textarea name="notes" rows="4" required
                                                     placeholder="Contoh: Pasien terpeleset, sudah ditangani dokter..."
