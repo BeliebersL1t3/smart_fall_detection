@@ -37,20 +37,23 @@ class EmergencyNotifier
         // Kirim Telegram lebih dulu agar instan dan tidak terblokir oleh SMTP timeout
         $this->sendTelegram($event, $user);
 
-        if ($user?->email) {
+        // Jika device belum di-assign ke user, fallback ke user pertama di database
+        $targetEmail = $user?->email ?? User::first()?->email;
+
+        if ($targetEmail) {
             try {
                 Log::info('Emergency email sending', [
                     'from' => config('mail.from.address'),
-                    'to' => $user->email,
+                    'to' => $targetEmail,
                     'event_id' => $event->id,
                 ]);
 
-                Mail::to($user->email)->send(new EmergencyAlertMail($event, $location));
+                Mail::to($targetEmail)->send(new EmergencyAlertMail($event, $location));
 
-                Log::info('Emergency email sent', ['to' => $user->email]);
+                Log::info('Emergency email sent', ['to' => $targetEmail]);
             } catch (\Throwable $e) {
                 Log::error('Emergency email failed: '.$e->getMessage(), [
-                    'to' => $user->email,
+                    'to' => $targetEmail,
                 ]);
             }
         } else {
