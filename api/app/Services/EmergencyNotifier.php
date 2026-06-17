@@ -34,6 +34,9 @@ class EmergencyNotifier
         $user = $device?->user;
         $location ??= $device?->displayLocation() ?? 'Perangkat ESP32';
 
+        // Kirim Telegram lebih dulu agar instan dan tidak terblokir oleh SMTP timeout
+        $this->sendTelegram($event, $user);
+
         if ($user?->email) {
             try {
                 Log::info('Emergency email sending', [
@@ -55,8 +58,6 @@ class EmergencyNotifier
                 'event_id' => $event->id,
             ]);
         }
-
-        $this->sendTelegram($event, $user);
     }
 
     private function sendTelegram(Event $event, ?User $user): void
