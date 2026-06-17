@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Jobs\SendEmergencyNotification;
 use App\Mail\EmergencyAlertMail;
 use App\Models\Device;
 use App\Models\Event;
