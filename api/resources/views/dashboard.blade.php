@@ -33,7 +33,7 @@
             </div>
             
             <button type="button" 
-                @click="show = false; fetch('{{ route('event.false_alarm', $latestEvent->id) }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' } });" 
+                @click="show = false; fetch('{{ route('event.false_alarm', $latestEvent->id) }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' } }).then(() => window.location.reload());" 
                 class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-6 rounded-lg shadow transition">
                 Mark as False Alarm
             </button>
