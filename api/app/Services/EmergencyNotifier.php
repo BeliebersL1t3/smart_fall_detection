@@ -14,11 +14,12 @@ use Illuminate\Support\Facades\Mail;
 class EmergencyNotifier
 {
     /**
-     * Antrikan email + Telegram agar request dashboard / ESP32 tidak lag.
+     * Jalankan notifikasi secara sinkronus agar tidak bergantung pada queue worker.
      */
     public function notify(Event $event, ?Device $device = null, ?string $location = null): void
     {
-        SendEmergencyNotification::dispatch(
+        // dispatchSync = langsung dieksekusi tanpa queue worker
+        SendEmergencyNotification::dispatchSync(
             $event->id,
             $device?->id ?? $event->device_id,
             $location
