@@ -37,8 +37,8 @@ class EmergencyNotifier
         // Kirim Telegram lebih dulu agar instan dan tidak terblokir oleh SMTP timeout
         $this->sendTelegram($event, $user);
 
-        // Prioritas: ALERT_EMAIL (Railway env) → email akun user → admin pertama
-        $targetEmail = env('ALERT_EMAIL') ?: ($user?->email ?? User::first()?->email);
+        // Prioritas: email akun user → ALERT_EMAIL (Railway env) → admin pertama
+        $targetEmail = $user?->email ?: (env('ALERT_EMAIL') ?: User::first()?->email);
 
         if ($targetEmail) {
             try {
