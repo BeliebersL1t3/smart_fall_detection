@@ -28,18 +28,24 @@
                 @csrf
                 <div>
                     <label class="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Caregiver Name</label>
-                    <input type="text" name="name" value="{{ auth()->user()->name }}" required class="ui-input focus:ring-blue-500">
+                    <input type="text" name="name" value="{{ old('name', auth()->user()->name) }}" required class="ui-input focus:ring-blue-500 @error('name') border-red-500 @enderror">
+                    @error('name')
+                        <p class="text-xs text-red-500 mt-1 font-medium">{{ $message }}</p>
+                    @enderror
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Email Penerima Alert (Login ID)</label>
-                    <input type="email" name="email" value="{{ auth()->user()->email }}" required class="ui-input focus:ring-blue-500">
+                    <input type="email" name="email" value="{{ old('email', auth()->user()->email) }}" required class="ui-input focus:ring-blue-500 @error('email') border-red-500 @enderror">
+                    @error('email')
+                        <p class="text-xs text-red-500 mt-1 font-medium">{{ $message }}</p>
+                    @enderror
                     <p class="text-xs text-blue-600 dark:text-blue-400 mt-2 font-medium">
                         Alert darurat dikirim <strong>ke email ini</strong> dari pengirim sistem
                         <code class="bg-gray-100 dark:bg-slate-800 px-1 rounded">{{ $mail['from_address'] ?: '—' }}</code>.
                     </p>
                     <p class="text-xs text-orange-500 mt-1 font-medium flex items-center">
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                        Warning: Changing this will change your login email.
+                        Warning: Mengubah ini juga mengubah email login Anda.
                     </p>
                 </div>
                 <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-xl shadow-md shadow-blue-500/30 transition-all">Save Profile</button>
@@ -227,11 +233,17 @@
                 @csrf
                 <div>
                     <label class="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Current Password</label>
-                    <input type="password" name="current_password" required class="ui-input focus:ring-slate-800">
+                    <input type="password" name="current_password" required class="ui-input focus:ring-slate-800 @error('current_password') border-red-500 @enderror">
+                    @error('current_password')
+                        <p class="text-xs text-red-500 mt-1 font-medium">{{ $message }}</p>
+                    @enderror
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">New Password (Min 8 characters)</label>
-                    <input type="password" name="new_password" required class="ui-input focus:ring-slate-800">
+                    <input type="password" name="new_password" required class="ui-input focus:ring-slate-800 @error('new_password') border-red-500 @enderror">
+                    @error('new_password')
+                        <p class="text-xs text-red-500 mt-1 font-medium">{{ $message }}</p>
+                    @enderror
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Confirm New Password</label>
