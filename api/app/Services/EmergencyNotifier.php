@@ -14,49 +14,25 @@ class EmergencyNotifier
 {
     /**
      * Titik masuk utama:
-     *  1. Telegram dikirim SEKARANG (cepat ~1 detik, tidak memblokir).
-     *  2. Email dijadwalkan via app()->terminating() sehingga dikirim
-     *     SETELAH response HTML sudah sampai ke browser — dashboard tidak lag sama sekali.
+     *  1. Telegram langsung sekarang (non-blocking, ~1 detik).
+     *  2. Email di-dispatch ke queue worker (async, response tidak tertahan).
      */
     public function notify(Event $event, ?Device $device = null, ?string $location = null): void
     {
-        // Muat relasi sekali di sini agar tersedia untuk Telegram & email
+        // Load relasi sekali di sini
         $device  ??= $event->device()->with('user')->first();
         $user      = $device?->user;
         $location ??= $device?->displayLocation() ?? 'Perangkat ESP32';
 
-        // ── 1. Telegram: langsung sekarang, cepat ────────────────────────
+        // ── 1. Telegram: langsung, cepat ─────────────────────────────────
         $this->sendTelegram($event, $user);
 
-        // ── 2. Email: setelah response sudah dikembalikan ke browser ─────
-        $targetEmail = $user?->email ?: (env('ALERT_EMAIL') ?: User::first()?->email);
-
-        if (! $targetEmail) {
-            Log::warning('Emergency email skipped: no recipient found', ['event_id' => $event->id]);
-            return;
-        }
-
-        // Capture by value agar closure tidak menahan model Eloquent terlalu lama
-        $eventId     = $event->id;
-        $eventType   = $event->type;
-        $eventPeak   = $event->acceleration_peak;
-        $emailAddr   = $targetEmail;
-        $emailLoc    = $location;
-
-        app()->terminating(function () use ($eventId, $eventType, $eventPeak, $emailAddr, $emailLoc) {
-            try {
-                // Reload event dari DB agar fresh (bukan stale instance)
-                $ev = Event::find($eventId);
-                if (! $ev) {
-                    return;
-                }
-                Log::info('Emergency email sending (after-response)', ['to' => $emailAddr, 'event_id' => $eventId]);
-                Mail::to($emailAddr)->send(new EmergencyAlertMail($ev, $emailLoc));
-                Log::info('Emergency email sent', ['to' => $emailAddr]);
-            } catch (\Throwable $e) {
-                Log::error('Emergency email failed: '.$e->getMessage(), ['to' => $emailAddr]);
-            }
-        });
+        // ── 2. Email: async via queue worker (tidak memblokir request) ───
+        SendEmergencyNotification::dispatch(
+            $event->id,
+            $device?->id ?? $event->device_id,
+            $location
+        );
     }
 
     /**

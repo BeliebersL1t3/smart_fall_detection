@@ -2,7 +2,7 @@
      x-data="iotConnection({
         userId: {{ auth()->id() }},
         deviceId: {{ $device->id }},
-        wsUrl: @js(sprintf('ws://%s:%d?user_id=%s', request()->getHost(), config('iot.ws_port'), auth()->id())),
+        wsUrl: @js(sprintf('%s://%s:%d?user_id=%s', request()->isSecure() ? 'wss' : 'ws', request()->getHost(), config('iot.ws_port'), auth()->id())),
         apiBase: @js($device->resolvedApiBaseUrl()),
         arduinoRoot: @js($device->arduinoApiRootUrl()),
         deviceToken: @js($device->device_token),

@@ -134,7 +134,7 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('liveMonitor', () => ({
         // ── state ──────────────────────────────────────────────────────
         liveUrl:         '{{ route("iot.live") }}',
-        wsBaseUrl:       '{{ sprintf("ws://%s:%d", request()->getHost(), config("iot.ws_port")) }}',
+        wsBaseUrl:       '{{ sprintf("%s://%s:%d", request()->isSecure() ? "wss" : "ws", request()->getHost(), config("iot.ws_port")) }}',
         userId:          {{ auth()->id() }},
 
         // Suppress all popups when user is already on the dashboard
