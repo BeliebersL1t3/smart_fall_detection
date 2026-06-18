@@ -1,6 +1,7 @@
 #include <Wire.h>
 #include <math.h>
 #include <WiFi.h>
+#include <WiFiClientSecure.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 
@@ -11,10 +12,10 @@ const char* WIFI_SSID     = "KONTRAKAN BARU";
 const char* WIFI_PASSWORD = "kuncipintu";
 
 // =====================================================
-// LARAVEL API
+// LARAVEL API (Railway Production)
 // =====================================================
-const char* API_BASE_URL  = "http://192.168.1.5:8000";
-const char* DEVICE_TOKEN  = "TOKEN_RAHASIA_123";
+const char* API_BASE_URL  = "https://smartfalldetection-production.up.railway.app";
+const char* DEVICE_TOKEN  = "GANTI_DENGAN_TOKEN_DI_SETTINGS"; // Lihat: Settings → ESP32 API Credentials → Device Token
 
 // =====================================================
 // ENDPOINT
@@ -126,10 +127,13 @@ float readBatteryPercentage() {
 void sendSensorData(float mag, float ax, float ay, float az, float battery) {
   if (WiFi.status() != WL_CONNECTED) return;
 
+  WiFiClientSecure client;
+  client.setInsecure(); // Skip SSL cert verification (cukup untuk production internal)
+
   HTTPClient http;
   String url = String(API_BASE_URL) + ENDPOINT_SENSOR;
 
-  http.begin(url);
+  http.begin(client, url);
   http.addHeader("Content-Type", "application/json");
   http.addHeader("X-Device-Token", DEVICE_TOKEN);
   http.addHeader("Accept", "application/json");
@@ -186,10 +190,13 @@ void sendFallAlert(float mag) {
   if (WiFi.status() != WL_CONNECTED)
     return;
 
+  WiFiClientSecure client;
+  client.setInsecure();
+
   HTTPClient http;
   String url = String(API_BASE_URL) + ENDPOINT_FALL;
 
-  http.begin(url);
+  http.begin(client, url);
   http.addHeader("Content-Type", "application/json");
   http.addHeader("X-Device-Token", DEVICE_TOKEN);
 
@@ -222,10 +229,13 @@ void sendSOSAlert(bool isActive) {
   if (WiFi.status() != WL_CONNECTED)
     return;
 
+  WiFiClientSecure client;
+  client.setInsecure();
+
   HTTPClient http;
   String url = String(API_BASE_URL) + ENDPOINT_SOS;
 
-  http.begin(url);
+  http.begin(client, url);
   http.addHeader("Content-Type", "application/json");
   http.addHeader("X-Device-Token", DEVICE_TOKEN);
   http.addHeader("Accept", "application/json");
