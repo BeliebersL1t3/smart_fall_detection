@@ -15,8 +15,8 @@ const char *ENDPOINT_SENSOR = "/api/sensor-data";
 const char *ENDPOINT_FALL = "/api/fall-detected";
 const char *ENDPOINT_SOS = "/api/sos";
 
-#define SDA_PIN 22
-#define SCL_PIN 23
+#define SDA_PIN 32
+#define SCL_PIN 26
 
 #define BUZZER_PIN 33
 #define SOS_BUTTON 25
@@ -32,6 +32,7 @@ bool fallAlarm = false;
 bool sosAlarm = false;
 
 unsigned long impactTime = 0;
+float impactMagnitude = 0.0; // peak G captured at moment of impact
 
 int lastButtonState = HIGH;
 
@@ -268,6 +269,8 @@ void loop() {
     Serial.println("🚨 IMPACT DETECTED!");
     impactDetected = true;
     impactTime = millis();
+    impactMagnitude = magnitude; // save peak G right now, not after immobility
+    Serial.printf("Impact Saved: %.3f G\n", impactMagnitude);
   }
 
   if (impactDetected) {
@@ -278,7 +281,7 @@ void loop() {
         Serial.println("🆘 FALL DETECTED!");
         fallAlarm = true;
         digitalWrite(BUZZER_PIN, HIGH);
-        sendFallAlert(magnitude);
+        sendFallAlert(impactMagnitude); // send the peak, not the post-immobility ~0G reading
       } else {
         Serial.println("❌ FALSE ALARM");
       }
