@@ -1,44 +1,47 @@
-#include <Wire.h>
-#include <math.h>
+#include <ArduinoJson.h>
+#include <HTTPClient.h>
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
-#include <HTTPClient.h>
-#include <ArduinoJson.h>
+#include <Wire.h>
+#include <math.h>
+
 
 // =====================================================
 // WIFI
 // =====================================================
-const char* WIFI_SSID     = "KONTRAKAN BARU";
-const char* WIFI_PASSWORD = "kuncipintu";
+const char *WIFI_SSID = "KONTRAKAN BARU";
+const char *WIFI_PASSWORD = "kuncipintu";
 
 // =====================================================
 // LARAVEL API (Railway Production)
 // =====================================================
-const char* API_BASE_URL  = "https://smartfalldetection-production.up.railway.app";
-const char* DEVICE_TOKEN  = "GANTI_DENGAN_TOKEN_DI_SETTINGS"; // Lihat: Settings → ESP32 API Credentials → Device Token
+const char *API_BASE_URL =
+    "https://smartfalldetection-production.up.railway.app";
+const char *DEVICE_TOKEN = "auunduulA7rlmkXu"; // Lihat: Settings → ESP32 API
+                                               // Credentials → Device Token
 
 // =====================================================
 // ENDPOINT
 // =====================================================
-const char* ENDPOINT_SENSOR = "/api/sensor-data";
-const char* ENDPOINT_FALL   = "/api/fall-detected";
-const char* ENDPOINT_SOS    = "/api/sos";
+const char *ENDPOINT_SENSOR = "/api/sensor-data";
+const char *ENDPOINT_FALL = "/api/fall-detected";
+const char *ENDPOINT_SOS = "/api/sos";
 
 // =====================================================
 // PIN CONFIG
 // =====================================================
-#define SDA_PIN        22
-#define SCL_PIN        23
+#define SDA_PIN 22
+#define SCL_PIN 23
 
-#define BUZZER_PIN     33
-#define SOS_BUTTON     25
+#define BUZZER_PIN 33
+#define SOS_BUTTON 25
 
-#define BATTERY_PIN    34
+#define BATTERY_PIN 34
 
 // =====================================================
 // FALL DETECTION CONFIG
 // =====================================================
-float impactThreshold   = 2.8;
+float impactThreshold = 2.8;
 float movementThreshold = 1.2;
 
 unsigned long immobilityTime = 3000;
@@ -46,7 +49,7 @@ unsigned long immobilityTime = 3000;
 bool impactDetected = false;
 
 bool fallAlarm = false;
-bool sosAlarm  = false;
+bool sosAlarm = false;
 
 unsigned long impactTime = 0;
 
@@ -64,9 +67,7 @@ const unsigned long sendInterval = 2000;
 // =====================================================
 // GET FINAL ALARM STATE
 // =====================================================
-bool getAlarmState() {
-  return fallAlarm || sosAlarm;
-}
+bool getAlarmState() { return fallAlarm || sosAlarm; }
 
 // =====================================================
 // WIFI CONNECT
@@ -97,25 +98,28 @@ void connectWiFi() {
 float readBatteryPercentage() {
   // 1. Baca nilai ADC dari pin baterai (ESP32 default 12-bit: 0 - 4095)
   int adcValue = analogRead(BATTERY_PIN);
-  
+
   // 2. Ubah nilai ADC menjadi tegangan fisik yang masuk ke pin ESP32 (0 - 3.3V)
   float pinVoltage = (adcValue / 4095.0) * 3.3;
-  
+
   // 3. Hitung tegangan baterai asli berdasarkan rasio resistor divider.
-  // Jika menggunakan R1 = 10k Ohm dan R2 = 10k Ohm, pembagian tegangannya adalah setengahnya.
-  // Kalibrasi faktor pengali (2.0) ini sesuai dengan hasil ukur multimeter jika diperlukan.
-  float batteryVoltage = pinVoltage * 2.0; 
-  
-  // 4. Konversi tegangan baterai ke rentang persentase (Asumsi Li-ion / LiPo 1S)
-  // Tegangan penuh (100%) = 4.2V, Tegangan kosong (0%) = 3.3V
+  // Jika menggunakan R1 = 10k Ohm dan R2 = 10k Ohm, pembagian tegangannya
+  // adalah setengahnya. Kalibrasi faktor pengali (2.0) ini sesuai dengan hasil
+  // ukur multimeter jika diperlukan.
+  float batteryVoltage = pinVoltage * 2.0;
+
+  // 4. Konversi tegangan baterai ke rentang persentase (Asumsi Li-ion / LiPo
+  // 1S) Tegangan penuh (100%) = 4.2V, Tegangan kosong (0%) = 3.3V
   float percentage = ((batteryVoltage - 3.3) / (4.2 - 3.3)) * 100.0;
-  
+
   // 5. Batasi nilai persentase agar tetap berada di rentang aman 0% hingga 100%
-  if (percentage > 100.0) percentage = 100.0;
-  if (percentage < 0.0)   percentage = 0.0;
-  
+  if (percentage > 100.0)
+    percentage = 100.0;
+  if (percentage < 0.0)
+    percentage = 0.0;
+
   // Tampilkan data ke Serial Monitor untuk keperluan monitoring/kalibrasi
-  Serial.printf("[BATTERY] ADC: %d | Pin V: %.2fV | Bat V: %.2fV | %0.1f%%\n", 
+  Serial.printf("[BATTERY] ADC: %d | Pin V: %.2fV | Bat V: %.2fV | %0.1f%%\n",
                 adcValue, pinVoltage, batteryVoltage, percentage);
 
   return percentage;
@@ -125,10 +129,12 @@ float readBatteryPercentage() {
 // SEND SENSOR DATA
 // =====================================================
 void sendSensorData(float mag, float ax, float ay, float az, float battery) {
-  if (WiFi.status() != WL_CONNECTED) return;
+  if (WiFi.status() != WL_CONNECTED)
+    return;
 
   WiFiClientSecure client;
-  client.setInsecure(); // Skip SSL cert verification (cukup untuk production internal)
+  client.setInsecure(); // Skip SSL cert verification (cukup untuk production
+                        // internal)
 
   HTTPClient http;
   String url = String(API_BASE_URL) + ENDPOINT_SENSOR;
@@ -158,18 +164,20 @@ void sendSensorData(float mag, float ax, float ay, float az, float battery) {
     DeserializationError error = deserializeJson(resDoc, responseBody);
 
     if (!error) {
-      // Ambil perintah buzzer dari server (command_buzzer yang kita buat di Laravel tadi)
-      bool shouldBuzzerBeOn = resDoc["telemetry"]["command_buzzer"]; 
+      // Ambil perintah buzzer dari server (command_buzzer yang kita buat di
+      // Laravel tadi)
+      bool shouldBuzzerBeOn = resDoc["telemetry"]["command_buzzer"];
 
-      // Jika di ESP32 alarm masih nyala (lokal), tapi server bilang "false" (dismissed)
+      // Jika di ESP32 alarm masih nyala (lokal), tapi server bilang "false"
+      // (dismissed)
       if (getAlarmState() == true && shouldBuzzerBeOn == false) {
         Serial.println("🔕 ALARM DISMISSED FROM DASHBOARD!");
-        
+
         // Matikan semua flag alarm di ESP32
         fallAlarm = false;
         sosAlarm = false;
         impactDetected = false;
-        
+
         // Matikan buzzer secara fisik
         digitalWrite(BUZZER_PIN, LOW);
       }
@@ -285,7 +293,8 @@ void setup() {
   pinMode(SOS_BUTTON, INPUT_PULLUP);
 
   // ADC CONFIGURATION
-  analogReadResolution(12); // Pastikan resolusi ADC ESP32 di-set ke 12-bit (0-4095)
+  analogReadResolution(
+      12); // Pastikan resolusi ADC ESP32 di-set ke 12-bit (0-4095)
 
   Serial.println("=================================");
   Serial.println(" SMART FALL DETECTION SYSTEM ");
@@ -339,19 +348,13 @@ void loop() {
   // =========================================
   // BATTERY (REAL-TIME)
   // =========================================
-  int batteryPercentage = (int)readBatteryPercentage(); 
+  int batteryPercentage = (int)readBatteryPercentage();
 
   // =========================================
   // SEND SENSOR DATA PERIODICALLY
   // =========================================
   if (millis() - lastSendTime >= sendInterval) {
-    sendSensorData(
-      magnitude,
-      ax_g,
-      ay_g,
-      az_g,
-      batteryPercentage
-    );
+    sendSensorData(magnitude, ax_g, ay_g, az_g, batteryPercentage);
     lastSendTime = millis();
   }
 
@@ -397,7 +400,7 @@ void loop() {
       Serial.println("🟢 ALERT CANCELLED");
       // RESET ALL
       fallAlarm = false;
-      sosAlarm  = false;
+      sosAlarm = false;
     }
 
     // BUZZER LANGSUNG RESPON
@@ -407,13 +410,7 @@ void loop() {
     sendSOSAlert(sosAlarm);
 
     // UPDATE STATUS DASHBOARD LANGSUNG
-    sendSensorData(
-      magnitude,
-      ax_g,
-      ay_g,
-      az_g,
-      batteryPercentage
-    );
+    sendSensorData(magnitude, ax_g, ay_g, az_g, batteryPercentage);
   }
 
   lastButtonState = currentButtonState;
