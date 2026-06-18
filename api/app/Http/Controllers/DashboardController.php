@@ -31,8 +31,8 @@ class DashboardController extends Controller
         
         $totalEvents = $allEvents->count();
         $emergencyCount = $allEvents->where('status', 'confirmed')->count();
-        // Only show the emergency banner for events that are confirmed AND not dismissed
-        $latestEvent = $allEvents->whereIn('status', ['confirmed', 'pending'])->whereNull('dismissed_at')->first()
+        // Emergency banner: hanya untuk confirmed yang belum di-dismiss
+        $latestEvent = $allEvents->where('status', 'confirmed')->whereNull('dismissed_at')->first()
             ?? $allEvents->first();
 
         $fallsCount = $allEvents->where('type', 'auto_fall')->count();
