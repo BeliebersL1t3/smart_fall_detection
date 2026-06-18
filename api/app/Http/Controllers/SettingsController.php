@@ -95,4 +95,18 @@ class SettingsController extends Controller
 
         return redirect()->back()->with('success', 'Password berhasil diubah!');
     }
+
+    public function updateResend(Request $request)
+    {
+        $request->validate([
+            'resend_api_key' => 'nullable|string',
+        ]);
+
+        $user = Auth::user();
+        $user->update([
+            'resend_api_key' => $request->resend_api_key,
+        ]);
+
+        return redirect()->back()->with('success', 'Custom Resend API Key berhasil disimpan!');
+    }
 }

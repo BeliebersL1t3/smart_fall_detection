@@ -33,6 +33,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/settings/api-base', [App\Http\Controllers\SettingsController::class, 'updateApiBase'])->name('settings.api_base');
     Route::post('/settings/password', [App\Http\Controllers\SettingsController::class, 'updatePassword'])->name('settings.password');
     Route::post('/settings/telegram', [App\Http\Controllers\SettingsController::class, 'updateTelegram'])->name('settings.telegram');
+    Route::post('/settings/resend', [App\Http\Controllers\SettingsController::class, 'updateResend'])->name('settings.resend');
 
     Route::get('/analytics', [App\Http\Controllers\AnalyticsController::class, 'index'])->name('analytics');
 

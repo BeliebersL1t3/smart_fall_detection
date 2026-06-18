@@ -60,11 +60,11 @@
             </div>
             <div>
                 <h3 class="text-lg font-bold ui-title">Pengirim Email Sistem</h3>
-                <p class="text-xs ui-subtitle font-medium">Akun Gmail resmi untuk mengirim alert — hanya diatur di <code class="bg-gray-100 dark:bg-slate-700 px-1 rounded">.env</code> (tidak bisa diubah dari dashboard).</p>
+                <p class="text-xs ui-subtitle font-medium">Bypass batasan Sandbox Resend dengan API Key Anda sendiri.</p>
             </div>
         </div>
         <div class="p-6 space-y-3 text-sm">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div class="bg-gray-50 dark:bg-slate-900/60 rounded-xl p-4 border border-gray-100 dark:border-slate-700">
                     <p class="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Dari (From)</p>
                     <p class="font-mono font-semibold text-emerald-700 dark:text-emerald-400">{{ $mail['from_address'] ?: 'Belum dikonfigurasi' }}</p>
@@ -76,10 +76,20 @@
                     <p class="text-xs ui-muted mt-1">Email profil perawat di atas</p>
                 </div>
             </div>
-            <p class="text-xs ui-muted">
-                SMTP: {{ $mail['host'] }}:{{ $mail['port'] }} ({{ $mail['scheme'] }})
-                · Kredensial pengirim aman di server.
-            </p>
+
+            <form action="{{ route('settings.resend') }}" method="POST" class="space-y-4 pt-2 border-t border-gray-100 dark:border-slate-800">
+                @csrf
+                <div>
+                    <label for="resend_api_key" class="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Custom Resend API Key</label>
+                    <input type="password" name="resend_api_key" id="resend_api_key"
+                           placeholder="{{ auth()->user()->resend_api_key ? '•••••••• (Terisi, biarkan kosong untuk tetap memakai ini)' : 're_XXXXXXXXXXXXXXXXXXXXX' }}"
+                           class="ui-input focus:ring-emerald-500 font-mono text-sm">
+                </div>
+                <div class="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-4 border border-emerald-100 dark:border-emerald-800/50 text-xs text-emerald-700 dark:text-emerald-400 space-y-1">
+                    <p><strong>Tips:</strong> Jika menggunakan API Key Resend pribadi, sistem bisa mengirim peringatan darurat ke email ini <strong>meski berada di mode pengujian (sandbox)</strong>.</p>
+                </div>
+                <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-6 rounded-xl shadow-md shadow-emerald-500/30 transition-all">Simpan API Key Resend</button>
+            </form>
         </div>
     </div>
 

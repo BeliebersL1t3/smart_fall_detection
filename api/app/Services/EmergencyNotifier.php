@@ -50,10 +50,17 @@ class EmergencyNotifier
 
         if ($targetEmail) {
             try {
+                // Gunakan Custom Resend API Key milik user jika ada
+                if ($user && $user->resend_api_key) {
+                    config(['resend.api_key' => $user->resend_api_key]);
+                    app('mail.manager')->forgetMailers();
+                }
+
                 Log::info('Emergency email sending (sendNow)', [
                     'from'     => config('mail.from.address'),
                     'to'       => $targetEmail,
                     'event_id' => $event->id,
+                    'using_custom_key' => ($user && $user->resend_api_key) ? 'yes' : 'no',
                 ]);
                 Mail::to($targetEmail)->send(new EmergencyAlertMail($event, $location));
                 Log::info('Emergency email sent', ['to' => $targetEmail]);
