@@ -13,22 +13,14 @@ use Illuminate\Support\Facades\Mail;
 
 class EmergencyNotifier
 {
-    /**
-     * Titik masuk utama:
-     *  1. Telegram langsung sekarang (non-blocking, ~1 detik).
-     *  2. Email di-dispatch ke queue worker (async, response tidak tertahan).
-     */
     public function notify(Event $event, ?Device $device = null, ?string $location = null): void
     {
-        // Load relasi sekali di sini
         $device  ??= $event->device()->with('user')->first();
         $user      = $device?->user;
         $location ??= $device?->displayLocation() ?? 'Perangkat ESP32';
 
-        // ── 1. Telegram: langsung, cepat ─────────────────────────────────
         $this->sendTelegram($event, $user);
 
-        // ── 2. Email: async via queue worker (tidak memblokir request) ───
         SendEmergencyNotification::dispatch(
             $event->id,
             $device?->id ?? $event->device_id,
@@ -36,10 +28,6 @@ class EmergencyNotifier
         );
     }
 
-    /**
-     * Dipanggil oleh queue worker (backward compat) — kirim langsung.
-     * Telegram sudah dikirim di notify(), jadi di sini cukup email.
-     */
     public function sendNow(Event $event, ?Device $device = null, ?string $location = null): void
     {
         $device  ??= $event->device()->with('user')->first();
@@ -50,7 +38,6 @@ class EmergencyNotifier
 
         if ($targetEmail) {
             try {
-                // Gunakan Custom Resend API Key milik user jika ada
                 if ($user && $user->resend_api_key) {
                     config(['resend.api_key' => $user->resend_api_key]);
                     app('mail.manager')->forgetMailers();
