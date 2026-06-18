@@ -42,11 +42,13 @@
     </div>
     @endif
 
+
     @php
-        $isDismissed = $latestEvent ? in_array($latestEvent->id, session('dismissed_alerts', [])) : false;
+        // dismissed_at is persisted in DB — survives logout/login
+        $isDismissed = $latestEvent ? !is_null($latestEvent->dismissed_at) : true;
     @endphp
 
-    @if($latestEvent && $latestEvent->status === 'confirmed' && !$isDismissed)
+    @if($latestEvent && in_array($latestEvent->status, ['confirmed', 'pending']) && !$isDismissed)
     @php
         $isSos = $latestEvent->type === 'manual_sos';
         $bgClass = $isSos ? 'bg-blue-500 shadow-blue-500/40' : 'bg-red-500 shadow-red-500/40';

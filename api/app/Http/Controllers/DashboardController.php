@@ -31,7 +31,9 @@ class DashboardController extends Controller
         
         $totalEvents = $allEvents->count();
         $emergencyCount = $allEvents->where('status', 'confirmed')->count();
-        $latestEvent = $allEvents->first();
+        // Only show the emergency banner for events that are confirmed AND not dismissed
+        $latestEvent = $allEvents->whereIn('status', ['confirmed', 'pending'])->whereNull('dismissed_at')->first()
+            ?? $allEvents->first();
 
         $fallsCount = $allEvents->where('type', 'auto_fall')->count();
         $sosCount = $allEvents->where('type', 'manual_sos')->count();
@@ -119,13 +121,11 @@ class DashboardController extends Controller
 
     public function dismissAlert($id)
     {
-        $event = Event::findOrFail($id);
-        $dismissedAlerts = session()->get('dismissed_alerts', []);
-        
-        if (!in_array($id, $dismissedAlerts)) {
-            $dismissedAlerts[] = $id;
-            session()->put('dismissed_alerts', $dismissedAlerts);
-        }
+        $event = Event::whereHas('device', fn ($q) => $q->where('user_id', Auth::id()))
+            ->findOrFail($id);
+
+        // Persist dismiss state to DB so it survives logout/login
+        $event->update(['dismissed_at' => now()]);
 
         // MATIKAN BUZZER: Update status device ke normal
         $event->device->update(['last_status' => 'normal']);
