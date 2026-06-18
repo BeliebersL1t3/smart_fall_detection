@@ -311,3 +311,4 @@ void loop() {
 
   digitalWrite(BUZZER_PIN, getAlarmState() ? HIGH : LOW);
 }
+
